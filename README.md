@@ -39,11 +39,25 @@ Ver [`.env.example`](.env.example). Los secretos viven en `.env.local` (ignorado
 | `ADMIN_USER` / `ADMIN_PASS` | Credenciales de acceso al panel `/admin` |
 | `ADMIN_SECRET` | Valor de la cookie de sesión del admin |
 
+## Despliegue (Cloudflare Workers)
+
+El proyecto se despliega como **Cloudflare Worker** con el adaptador [OpenNext](https://opennext.js.org/cloudflare). La base D1 se accede mediante el binding `DB` en producción (ver [`wrangler.jsonc`](wrangler.jsonc)); en desarrollo local se usa la API REST de Cloudflare con tu sesión de Wrangler.
+
+```bash
+# Requiere estar autenticado: npx wrangler login
+npm run deploy     # compila con OpenNext y publica el Worker
+npm run preview    # compila y prueba el Worker localmente
+```
+
+Las variables de `.env.local` se inyectan en el Worker en tiempo de build (no se versionan). Para cambiar la clave del admin en producción, edita `.env.local` y vuelve a desplegar, o defínelas como *secrets* del Worker.
+
 ## Scripts
 
 | Comando | Acción |
 | --- | --- |
 | `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Compilación de producción |
+| `npm run build` | Compilación de producción (Next.js) |
 | `npm run start` | Servir la compilación |
 | `npm run lint` | ESLint |
+| `npm run deploy` | Compilar con OpenNext y desplegar el Worker |
+| `npm run preview` | Compilar y previsualizar el Worker en local |

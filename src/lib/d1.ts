@@ -1,27 +1,57 @@
 import "server-only";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { writeFile, unlink, readFile } from "node:fs/promises";
-import path from "node:path";
-import os from "node:os";
 
 /**
  * Acceso a la base de datos D1 "motros".
- * Vía rápida: API REST de Cloudflare por HTTP usando el token OAuth de la sesión
- * local de Wrangler (~200ms). Respaldo: el CLI de Wrangler (~1.5s) si algo falla.
+ *
+ * - En producción (Cloudflare Workers): se usa el binding `DB` directamente
+ *   a través de `getCloudflareContext()` (OpenNext).
+ * - En desarrollo local (`next dev`): no hay binding, así que se cae al camino
+ *   local — API REST de Cloudflare con el token OAuth de la sesión de Wrangler
+ *   (~200ms) y, como último respaldo, el CLI de Wrangler (~1.5s).
+ *
+ * Los módulos de Node (child_process, fs, os) se importan de forma dinámica para
+ * que NO entren en el bundle de Workers (donde child_process no existe).
  */
-const exec = promisify(execFile);
-const WRANGLER = path.join(process.cwd(), "node_modules", ".bin", "wrangler");
-const DB = "motros";
+
+const DB_NAME = "motros";
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID ?? "";
 const DBID = process.env.CLOUDFLARE_D1_DATABASE_ID ?? "";
+
+type Row = Record<string, unknown>;
+type Mode = "query" | "exec";
+
+// Tipo mínimo del binding D1 (evita depender de @cloudflare/workers-types).
+interface D1Prepared {
+  all(): Promise<{ results?: Row[] }>;
+  run(): Promise<unknown>;
+}
+interface D1Database {
+  prepare(sql: string): D1Prepared;
+}
 
 export function esc(v: string | null | undefined): string {
   if (v === null || v === undefined) return "NULL";
   return "'" + String(v).replace(/'/g, "''") + "'";
 }
 
+// --- Producción: binding D1 vía OpenNext ---
+// Devuelve el binding si estamos dentro del Worker; null en `next dev` (sin
+// contexto de Cloudflare), para que se use el camino local.
+async function getBinding(): Promise<D1Database | null> {
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const env = getCloudflareContext().env as unknown as { DB?: D1Database };
+    return env.DB ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// --- Local: API REST de Cloudflare con el token OAuth de Wrangler ---
 async function oauthToken(): Promise<string | null> {
+  const { readFile } = await import("node:fs/promises");
+  const os = await import("node:os");
+  const path = await import("node:path");
   const candidates = [
     path.join(os.homedir(), "Library/Preferences/.wrangler/config/default.toml"),
     path.join(os.homedir(), ".config/.wrangler/config/default.toml"),
@@ -37,8 +67,7 @@ async function oauthToken(): Promise<string | null> {
   return null;
 }
 
-// --- Vía rápida: API REST ---
-async function rest(sql: string): Promise<Record<string, unknown>[]> {
+async function rest(sql: string): Promise<Row[]> {
   const token = await oauthToken();
   if (!token || !ACCOUNT || !DBID) throw new Error("rest-unavailable");
   const res = await fetch(
@@ -54,42 +83,47 @@ async function rest(sql: string): Promise<Record<string, unknown>[]> {
   );
   const data = (await res.json()) as {
     success: boolean;
-    result?: { results?: Record<string, unknown>[] }[];
+    result?: { results?: Row[] }[];
     errors?: unknown;
   };
   if (!data.success) throw new Error(JSON.stringify(data.errors));
   return data.result?.[0]?.results ?? [];
 }
 
-// --- Respaldo: CLI de Wrangler ---
-async function viaCli(extra: string[]): Promise<Record<string, unknown>[]> {
+// --- Local: respaldo con el CLI de Wrangler ---
+async function viaCli(extra: string[]): Promise<Row[]> {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const path = await import("node:path");
+  const exec = promisify(execFile);
+  const WRANGLER = path.join(process.cwd(), "node_modules", ".bin", "wrangler");
   const { stdout } = await exec(
     WRANGLER,
-    ["d1", "execute", DB, "--remote", "--json", ...extra],
+    ["d1", "execute", DB_NAME, "--remote", "--json", ...extra],
     { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 },
   );
   const start = stdout.indexOf("[");
   const parsed = JSON.parse(stdout.slice(start));
   const first = Array.isArray(parsed) ? parsed[0] : parsed;
-  return ((first as { results?: Record<string, unknown>[] })?.results ??
-    []) as Record<string, unknown>[];
+  return ((first as { results?: Row[] })?.results ?? []) as Row[];
 }
 
-export async function query<T = Record<string, unknown>>(
-  sql: string,
-): Promise<T[]> {
-  try {
-    return (await rest(sql)) as T[];
-  } catch {
-    return (await viaCli(["--command", sql])) as T[];
+async function viaLocal(sql: string, mode: Mode): Promise<Row[]> {
+  if (mode === "query") {
+    try {
+      return await rest(sql);
+    } catch {
+      return await viaCli(["--command", sql]);
+    }
   }
-}
-
-export async function execSql(sql: string): Promise<void> {
+  // exec
   try {
     await rest(sql);
-    return;
+    return [];
   } catch {
+    const { writeFile, unlink } = await import("node:fs/promises");
+    const os = await import("node:os");
+    const path = await import("node:path");
     const tmp = path.join(
       os.tmpdir(),
       `d1-${process.hrtime.bigint().toString(36)}.sql`,
@@ -100,5 +134,26 @@ export async function execSql(sql: string): Promise<void> {
     } finally {
       await unlink(tmp).catch(() => {});
     }
+    return [];
   }
+}
+
+export async function query<T = Row>(sql: string): Promise<T[]> {
+  const db = await getBinding();
+  if (db) {
+    const res = await db.prepare(sql).all();
+    return (res.results ?? []) as T[];
+  }
+  return (await viaLocal(sql, "query")) as T[];
+}
+
+export async function execSql(sql: string): Promise<void> {
+  const db = await getBinding();
+  if (db) {
+    // Una sola sentencia: usamos prepare().run() (no .exec(), que parte por \n y
+    // rompería el HTML multilínea de los artículos).
+    await db.prepare(sql).run();
+    return;
+  }
+  await viaLocal(sql, "exec");
 }
