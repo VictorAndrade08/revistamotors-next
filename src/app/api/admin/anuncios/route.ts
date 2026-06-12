@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { query, execSql, esc } from "@/lib/d1";
 import { ANUNCIOS } from "@/lib/anuncios";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 type Estado = { id: string; imagen: string | null; activo: number };

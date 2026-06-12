@@ -7,7 +7,7 @@ import {
   ADMIN_COOKIE,
 } from "@/lib/admin-config";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 export async function POST(req: Request) {
   const { user, pass } = await req.json();

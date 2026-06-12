@@ -14,3 +14,11 @@ CREATE TABLE articulos (
 );
 
 CREATE INDEX idx_articulos_fecha ON articulos (fecha DESC);
+
+-- Imágenes subidas desde el admin (servidas por /api/img/[id]).
+CREATE TABLE IF NOT EXISTS imagenes (
+  id        TEXT PRIMARY KEY,
+  mime      TEXT NOT NULL,
+  datos     TEXT NOT NULL,           -- contenido en base64
+  creado_en TEXT DEFAULT (datetime('now'))
+);

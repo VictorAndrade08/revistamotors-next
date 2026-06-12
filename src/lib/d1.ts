@@ -1,27 +1,25 @@
 import "server-only";
+import { getRequestContext } from "@cloudflare/next-on-pages";
 
 /**
- * Acceso a la base de datos D1 "motros".
+ * Acceso a la base de datos D1 "motros" (compatible con el runtime edge de Pages).
  *
- * - En producción (Cloudflare Workers): se usa el binding `DB` directamente
- *   a través de `getCloudflareContext()` (OpenNext).
- * - En desarrollo local (`next dev`): no hay binding, así que se cae al camino
- *   local — API REST de Cloudflare con el token OAuth de la sesión de Wrangler
- *   (~200ms) y, como último respaldo, el CLI de Wrangler (~1.5s).
- *
- * Los módulos de Node (child_process, fs, os) se importan de forma dinámica para
- * que NO entren en el bundle de Workers (donde child_process no existe).
+ * - En producción (Cloudflare Pages): binding `DB` vía getRequestContext().
+ * - En desarrollo (`next dev` con setupDevPlatform): mismo binding, servido por
+ *   una copia local de D1 (semilla en db/seed.sql).
+ * - Respaldo opcional: API REST de Cloudflare con CLOUDFLARE_API_TOKEN en .env.local
+ *   (solo fetch, sin módulos de Node — apto para edge).
  */
 
-const DB_NAME = "motros";
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID ?? "";
 const DBID = process.env.CLOUDFLARE_D1_DATABASE_ID ?? "";
+const API_TOKEN = process.env.CLOUDFLARE_API_TOKEN ?? "";
 
 type Row = Record<string, unknown>;
-type Mode = "query" | "exec";
 
 // Tipo mínimo del binding D1 (evita depender de @cloudflare/workers-types).
 interface D1Prepared {
+  bind(...params: unknown[]): D1Prepared;
   all(): Promise<{ results?: Row[] }>;
   run(): Promise<unknown>;
 }
@@ -34,51 +32,31 @@ export function esc(v: string | null | undefined): string {
   return "'" + String(v).replace(/'/g, "''") + "'";
 }
 
-// --- Producción: binding D1 vía OpenNext ---
-// Devuelve el binding si estamos dentro del Worker; null en `next dev` (sin
-// contexto de Cloudflare), para que se use el camino local.
-async function getBinding(): Promise<D1Database | null> {
+function getDb(): D1Database | null {
   try {
-    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-    const env = getCloudflareContext().env as unknown as { DB?: D1Database };
+    const env = getRequestContext().env as unknown as { DB?: D1Database };
     return env.DB ?? null;
   } catch {
     return null;
   }
 }
 
-// --- Local: API REST de Cloudflare con el token OAuth de Wrangler ---
-async function oauthToken(): Promise<string | null> {
-  const { readFile } = await import("node:fs/promises");
-  const os = await import("node:os");
-  const path = await import("node:path");
-  const candidates = [
-    path.join(os.homedir(), "Library/Preferences/.wrangler/config/default.toml"),
-    path.join(os.homedir(), ".config/.wrangler/config/default.toml"),
-    path.join(os.homedir(), ".wrangler/config/default.toml"),
-  ];
-  for (const p of candidates) {
-    try {
-      const txt = await readFile(p, "utf8");
-      const m = txt.match(/oauth_token\s*=\s*"([^"]+)"/);
-      if (m) return m[1];
-    } catch {}
+// Respaldo: API REST de Cloudflare (requiere CLOUDFLARE_API_TOKEN).
+async function rest(sql: string, params: unknown[] = []): Promise<Row[]> {
+  if (!API_TOKEN || !ACCOUNT || !DBID) {
+    throw new Error(
+      "Base de datos no disponible: falta el binding DB o CLOUDFLARE_API_TOKEN",
+    );
   }
-  return null;
-}
-
-async function rest(sql: string): Promise<Row[]> {
-  const token = await oauthToken();
-  if (!token || !ACCOUNT || !DBID) throw new Error("rest-unavailable");
   const res = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/d1/database/${DBID}/query`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${API_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ sql }),
+      body: JSON.stringify({ sql, params }),
     },
   );
   const data = (await res.json()) as {
@@ -90,70 +68,48 @@ async function rest(sql: string): Promise<Row[]> {
   return data.result?.[0]?.results ?? [];
 }
 
-// --- Local: respaldo con el CLI de Wrangler ---
-async function viaCli(extra: string[]): Promise<Row[]> {
-  const { execFile } = await import("node:child_process");
-  const { promisify } = await import("node:util");
-  const path = await import("node:path");
-  const exec = promisify(execFile);
-  const WRANGLER = path.join(process.cwd(), "node_modules", ".bin", "wrangler");
-  const { stdout } = await exec(
-    WRANGLER,
-    ["d1", "execute", DB_NAME, "--remote", "--json", ...extra],
-    { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 },
-  );
-  const start = stdout.indexOf("[");
-  const parsed = JSON.parse(stdout.slice(start));
-  const first = Array.isArray(parsed) ? parsed[0] : parsed;
-  return ((first as { results?: Row[] })?.results ?? []) as Row[];
-}
-
-async function viaLocal(sql: string, mode: Mode): Promise<Row[]> {
-  if (mode === "query") {
-    try {
-      return await rest(sql);
-    } catch {
-      return await viaCli(["--command", sql]);
-    }
-  }
-  // exec
-  try {
-    await rest(sql);
-    return [];
-  } catch {
-    const { writeFile, unlink } = await import("node:fs/promises");
-    const os = await import("node:os");
-    const path = await import("node:path");
-    const tmp = path.join(
-      os.tmpdir(),
-      `d1-${process.hrtime.bigint().toString(36)}.sql`,
-    );
-    await writeFile(tmp, sql, "utf8");
-    try {
-      await viaCli(["--file", tmp]);
-    } finally {
-      await unlink(tmp).catch(() => {});
-    }
-    return [];
-  }
-}
-
 export async function query<T = Row>(sql: string): Promise<T[]> {
-  const db = await getBinding();
+  const db = getDb();
   if (db) {
     const res = await db.prepare(sql).all();
     return (res.results ?? []) as T[];
   }
-  return (await viaLocal(sql, "query")) as T[];
+  return (await rest(sql)) as T[];
 }
 
 export async function execSql(sql: string): Promise<void> {
-  const db = await getBinding();
+  const db = getDb();
   if (db) {
-    // Una sola sentencia: usamos prepare().run() (no .exec(), que parte por \n y
+    // Una sola sentencia: prepare().run() (no .exec(), que parte por \n y
     // rompería el HTML multilínea de los artículos).
     await db.prepare(sql).run();
     return;
   }
-  await viaLocal(sql, "exec");
+  await rest(sql);
+}
+
+// Variantes con parámetros (?1, ?2…), para valores grandes (p. ej. imágenes):
+// D1 limita el tamaño de la sentencia SQL, así que los datos van como params.
+export async function queryParams<T = Row>(
+  sql: string,
+  params: unknown[],
+): Promise<T[]> {
+  const db = getDb();
+  if (db) {
+    const res = await db.prepare(sql).bind(...params).all();
+    return (res.results ?? []) as T[];
+  }
+  return (await rest(sql, params)) as T[];
+}
+
+export async function runParams(
+  sql: string,
+  params: unknown[],
+): Promise<void> {
+  const db = getDb();
+  if (db) {
+    await db.prepare(sql).bind(...params).run();
+    return;
+  }
+  await rest(sql, params);
 }

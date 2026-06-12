@@ -1,13 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "revistamotors",
-  "main": ".open-next/worker.js",
+  // Proyecto de Cloudflare Pages (next-on-pages).
+  "name": "revistamotors-next",
+  "pages_build_output_dir": ".vercel/output/static",
   "compatibility_date": "2025-06-01",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
+  "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
     {
       "binding": "DB",

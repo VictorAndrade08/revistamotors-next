@@ -3,7 +3,7 @@ import { query } from "@/lib/d1";
 import { ANUNCIOS } from "@/lib/anuncios";
 
 // API pública: el sitio la usa para aplicar los anuncios (imagen / activo).
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 type Estado = { id: string; imagen: string | null; activo: number };

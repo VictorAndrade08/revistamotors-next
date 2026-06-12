@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, execSql, esc } from "@/lib/d1";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(

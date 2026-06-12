@@ -1,8 +1,24 @@
-import shell from "@/site-data/search-shell.json";
-import index from "@/site-data/search-index.json";
+// Los JSON se leen con fs (no import): contienen caracteres que rompen la
+// serialización JSON de webpack. La página es estática, solo corre en build.
+import fs from "node:fs/promises";
+import path from "node:path";
 import ThemeScripts from "@/components/ThemeScripts";
 import SearchFilter from "@/components/SearchFilter";
 import type { ScriptEntry } from "@/site-data/loader";
+
+type Shell = {
+  bodyClass: string;
+  head: string;
+  prefix: string;
+  suffix: string;
+  cardTemplate: string;
+  scripts: ScriptEntry[];
+};
+
+async function readJson<T>(file: string): Promise<T> {
+  const p = path.join(process.cwd(), "src", "site-data", file);
+  return JSON.parse(await fs.readFile(p, "utf-8")) as T;
+}
 
 type Item = {
   title: string;
@@ -30,9 +46,9 @@ function findKey(s: string) {
     .trim();
 }
 
-function buildCard(it: Item): string {
+function buildCard(shell: Shell, it: Item): string {
   const find = findKey(`${it.title} ${it.text}`);
-  return (shell.cardTemplate as string)
+  return shell.cardTemplate
     .replaceAll("{{URL}}", esc(it.url))
     .replaceAll("{{TITLE}}", esc(it.title))
     .replaceAll("{{THUMB}}", esc(it.thumb))
@@ -42,8 +58,10 @@ function buildCard(it: Item): string {
 
 export const metadata = { title: "Buscar" };
 
-export default function BuscarPage() {
-  const cards = (index as Item[]).map(buildCard).join("\n");
+export default async function BuscarPage() {
+  const shell = await readJson<Shell>("search-shell.json");
+  const index = await readJson<Item[]>("search-index.json");
+  const cards = index.map((it) => buildCard(shell, it)).join("\n");
   const html = shell.prefix + cards + shell.suffix;
 
   return (
@@ -54,7 +72,7 @@ export default function BuscarPage() {
         dangerouslySetInnerHTML={{ __html: shell.head }}
       />
       <div dangerouslySetInnerHTML={{ __html: html }} />
-      <ThemeScripts scripts={shell.scripts as ScriptEntry[]} />
+      <ThemeScripts scripts={shell.scripts} />
       <SearchFilter />
     </div>
   );
