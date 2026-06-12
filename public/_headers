@@ -1,0 +1,9 @@
+# Caché agresiva para los assets del tema (no cambian).
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/site-data/*
+  Cache-Control: public, max-age=3600

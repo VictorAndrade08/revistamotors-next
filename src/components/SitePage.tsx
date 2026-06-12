@@ -9,6 +9,15 @@ import ThemeScripts from "./ThemeScripts";
  * El wrapper lleva las clases del <body> original para que las variables CSS
  * del tema (Elementor/Foxiz) cascadeen correctamente.
  */
+// Las primeras imágenes (arriba del pliegue: slider/portadas) cargan al
+// instante y con prioridad alta; el resto se queda lazy para no saturar.
+function eagerizeAboveFold(html: string, count = 4): string {
+  let i = 0;
+  return html.replace(/loading="lazy"/g, (m) =>
+    i++ < count ? 'fetchpriority="high"' : m,
+  );
+}
+
 export default function SitePage({ page }: { page: PageData }) {
   return (
     <div className={page.bodyClass}>
@@ -17,7 +26,7 @@ export default function SitePage({ page }: { page: PageData }) {
         aria-hidden
         dangerouslySetInnerHTML={{ __html: page.head }}
       />
-      <div dangerouslySetInnerHTML={{ __html: page.body }} />
+      <div dangerouslySetInnerHTML={{ __html: eagerizeAboveFold(page.body) }} />
       <ThemeScripts scripts={page.scripts} />
     </div>
   );
