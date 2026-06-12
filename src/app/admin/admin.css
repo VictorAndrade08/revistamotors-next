@@ -1,0 +1,83 @@
+/* Reset y estilos SOLO para el panel (.admin-ui), sin afectar al tema del sitio. */
+.admin-ui {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #0e1116;
+}
+/* El reset va en @layer base para que las utilidades de Tailwind (text-3xl,
+   font-extrabold, etc.) puedan sobreescribirlo. */
+@layer base {
+  .admin-ui input,
+  .admin-ui textarea,
+  .admin-ui select,
+  .admin-ui button {
+    appearance: none;
+    -webkit-appearance: none;
+    border-style: solid;
+    border-width: 0;
+    font-family: inherit;
+    font-size: 1rem;
+    color: inherit;
+    background-color: transparent;
+    outline: none;
+    margin: 0;
+  }
+  .admin-ui button {
+    cursor: pointer;
+  }
+}
+.admin-ui ::placeholder {
+  color: #9ca3af;
+}
+
+/* --- Editor (Tiptap / ProseMirror) --- */
+.admin-ui .ProseMirror {
+  min-height: 380px;
+  outline: none;
+}
+.admin-ui .ProseMirror:focus {
+  outline: none;
+}
+.admin-ui .ProseMirror > * + * {
+  margin-top: 0.85em;
+}
+.admin-ui .ProseMirror h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-top: 1.2em;
+}
+.admin-ui .ProseMirror h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-top: 1em;
+}
+.admin-ui .ProseMirror ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.admin-ui .ProseMirror ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.admin-ui .ProseMirror blockquote {
+  border-left: 4px solid #ed1c24;
+  padding-left: 1em;
+  color: #4b5563;
+  font-style: italic;
+}
+.admin-ui .ProseMirror a {
+  color: #ed1c24;
+  text-decoration: underline;
+}
+.admin-ui .ProseMirror img {
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+}
+.admin-ui .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

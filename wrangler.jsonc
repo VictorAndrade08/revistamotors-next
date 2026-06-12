@@ -1,0 +1,12 @@
+{
+  "name": "revistamotors",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "motros",
+      "database_id": "29f7d73f-1653-4121-ac9d-2ee9e6ab225f"
+    }
+  ]
+}

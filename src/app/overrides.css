@@ -1,0 +1,140 @@
+/* ===========================================================================
+ * Overrides de UX/UI sobre el marcado del tema (encuesta y detalles).
+ * Se usa !important porque el plugin trae estilos inline en los elementos.
+ * ======================================================================== */
+
+/* ---- Quitar el subrayado punteado del título del autor (.bio-title) ---- */
+.bio-title,
+.author-title {
+  text-decoration: none !important;
+  border-bottom: 0 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.bio-title::after,
+.bio-title::before,
+.author-title::after,
+.author-title::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* ---- Encuesta (yop-poll, skin "basic/minimal") ---- */
+.basic-yop-poll-container {
+  background: #ffffff !important;
+  border: 1px solid #e6e8ec !important;
+  border-radius: 16px !important;
+  box-shadow: 0 6px 24px rgba(16, 24, 40, 0.06) !important;
+  padding: 22px 20px !important;
+}
+
+.basic-question-title h5 {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #0e1116 !important;
+  text-align: left !important;
+  margin: 0 0 16px !important;
+  line-height: 1.3 !important;
+}
+
+.basic-answers {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.basic-answer {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.basic-answer-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  border: 1px solid #e6e8ec !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+.basic-answer-label:hover {
+  border-color: #ed1c24 !important;
+  background: #fff5f5 !important;
+}
+
+.basic-answer-label:has(input:checked) {
+  border-color: #ed1c24 !important;
+  background: #fff1f1 !important;
+  box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.15) !important;
+}
+
+.basic-answer-label input[type="radio"] {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: #ed1c24 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+}
+
+.basic-answer-label .basic-text {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #0e1116 !important;
+}
+
+/* Botón Votar */
+.basic-vote {
+  margin-top: 18px !important;
+  text-align: center !important;
+}
+.basic-vote-button,
+a.basic-vote-button {
+  display: inline-block !important;
+  background: #ed1c24 !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  padding: 12px 30px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+.basic-vote-button:hover {
+  background: #b3141a !important;
+}
+.basic-vote button,
+.basic-vote input[type="submit"],
+.basic-vote input[type="button"],
+.basic-yop-poll-container button[type="submit"] {
+  width: 100% !important;
+  background: #ed1c24 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 18px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s ease, transform 0.1s ease !important;
+}
+.basic-vote button:hover,
+.basic-vote input[type="submit"]:hover,
+.basic-vote input[type="button"]:hover {
+  background: #b3141a !important;
+}
+.basic-vote button:active {
+  transform: translateY(1px) !important;
+}
+
+/* Barras de resultados con color de marca */
+.basic-result-bar,
+.basic-percentage-bar {
+  background: #ed1c24 !important;
+}

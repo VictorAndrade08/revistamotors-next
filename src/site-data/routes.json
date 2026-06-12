@@ -1,0 +1,487 @@
+[
+  {
+    "route": "/",
+    "file": "0.json",
+    "title": "Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/alianza-sinotruk-man-sinotruk-firman-alianza-estrategica/",
+    "file": "1.json",
+    "title": "Alianza Sinotruk Man & Sinotruk Firman Alianza Estratégica - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/autor/admin/",
+    "file": "2.json",
+    "title": "Revista Motors, autor en Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/autor/admin/pagina/2/",
+    "file": "3.json",
+    "title": "Revista Motors, autor en Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias - Página 2 de 3"
+  },
+  {
+    "route": "/blog/",
+    "file": "4.json",
+    "title": "Blog - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/blog/pagina/2/",
+    "file": "5.json",
+    "title": "Blog - Página 2 de 3 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/categoria/destacado/",
+    "file": "6.json",
+    "title": "Destacado archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/categoria/motores/",
+    "file": "7.json",
+    "title": "Motores archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/categoria/noticias/",
+    "file": "8.json",
+    "title": "Noticias archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/categoria/noticias/pagina/2/",
+    "file": "9.json",
+    "title": "Noticias archivos - Página 2 de 2 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/categoria/resenas/",
+    "file": "10.json",
+    "title": "Reseñas archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/categoria/tecnologia/",
+    "file": "11.json",
+    "title": "Tecnología archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/consejos-para-cuidar-tus-neumaticos/",
+    "file": "12.json",
+    "title": "Consejos para cuidar tus neumáticos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/contact/",
+    "file": "13.json",
+    "title": "Contact - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/daf-xb-nueva-generacion-innovacion-en-la-distribucion-urbana/",
+    "file": "14.json",
+    "title": "DAF XB Nueva Generación: Innovación en la Distribución Urbana - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/default-home-2/",
+    "file": "15.json",
+    "title": "Default Home 2 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/default-home-3/",
+    "file": "16.json",
+    "title": "Default Home 3 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/default-home-4/",
+    "file": "17.json",
+    "title": "Default Home 4 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/default-home-5/",
+    "file": "18.json",
+    "title": "Default Home 5 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/descubre-la-potencia-y-eficiencia-del-nuevo-camion-nls-2-5-ton/",
+    "file": "19.json",
+    "title": "Descubre la Potencia y Eficiencia del Nuevo Camión NLS 2.5 TON - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/el-camion-electrico-mercedes-benz-eactros-600-hara-su-debut-mundial-en-octubre/",
+    "file": "20.json",
+    "title": "El Camión Eléctrico Mercedes-Benz eActros 600 Hará su Debut Mundial en Octubre - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/el-carro-mas-grande-del-segmento-7-pasajeros-conoce-lo-nuevo-de-vehicentro-sinotruk-u70/",
+    "file": "21.json",
+    "title": "El carro más grande del segmento (7 pasajeros) Conoce lo nuevo de Vehicentro, Sinotruk U70. - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/el-gac-gs8-la-apuesta-innovadora-en-suvs-de-alto-rendimiento/",
+    "file": "22.json",
+    "title": "El GAC GS8: La Apuesta Innovadora en SUVs de Alto Rendimiento - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/el-nuevo-chevrolet-bolt-ev-es-un-vehiculo-electrico-de-ultima-generacion/",
+    "file": "23.json",
+    "title": "El nuevo Chevrolet Bolt EV es un vehículo eléctrico de última generación - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/el-sector-automotriz-ecuatoriano-esta-dando-pasos-importantes-hacia-la-sostenibilidad/",
+    "file": "24.json",
+    "title": "El sector automotriz ecuatoriano está dando pasos importantes hacia la sostenibilidad - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/la-evolucion-de-los-motores-electricos-en-la-industria-automotriz/",
+    "file": "25.json",
+    "title": "La evolución de los motores eléctricos en la industria automotriz - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/la-ford-mustang-mas-reconocida-de-la-historia/",
+    "file": "26.json",
+    "title": "La Ford Mustang más reconocida de la historia - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/la-innovacion-en-los-motores-hibridos/",
+    "file": "27.json",
+    "title": "La innovación en los motores híbridos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/la-seguridad-de-los-automoviles-en-la-actualidad/",
+    "file": "28.json",
+    "title": "La seguridad de los automóviles en la actualidad - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/lamborghini-lanzador-concept-el-futuro-electrico-de-santagata-se-desvela/",
+    "file": "29.json",
+    "title": "Lamborghini Lanzador Concept: El Futuro Eléctrico de Sant'Agata Se Desvela - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/las-5-tendencias-mas-innovadoras-en-la-industria-automotriz-en-2023/",
+    "file": "30.json",
+    "title": "Las 5 tendencias más innovadoras en la industria automotriz en 2023 - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/las-innovaciones-tecnologicas-en-la-conectividad-de-los-vehiculos/",
+    "file": "31.json",
+    "title": "Las innovaciones tecnológicas en la conectividad de los vehículos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/las-ultimas-innovaciones-en-tecnologia-de-los-camiones-man/",
+    "file": "32.json",
+    "title": "Las últimas innovaciones en tecnología de los camiones Man - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/los-autos-deportivos-mas-populares-del-mercado-en-ecuador/",
+    "file": "33.json",
+    "title": "Los autos deportivos más populares del mercado en Ecuador - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/los-mejores-destinos-de-la-sierra-ecuatorina-para-montar-en-moto/",
+    "file": "34.json",
+    "title": "Los mejores destinos de la sierra ecuatoriana para montar en moto - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/los-motores-diesel-vs-gasolina-cual-es-mejor-para-tu-vehiculo/",
+    "file": "35.json",
+    "title": "Los motores diesel vs gasolina: ¿Cuál es mejor para tu vehículo? - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/los-vehiculos-todoterreno-mas-resistentes-y-economicos-en-america-latina/",
+    "file": "36.json",
+    "title": "Los vehículos todoterreno más resistentes y económicos en América Latina - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/por-que-es-importante-cambiar-el-aceite-de-tu-automovil/",
+    "file": "37.json",
+    "title": "¿Por qué es importante cambiar el aceite de tu automóvil? - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/sample-page/",
+    "file": "38.json",
+    "title": "Sample Page - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/2023/",
+    "file": "39.json",
+    "title": "2023 archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/aceite/",
+    "file": "40.json",
+    "title": "Aceite archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/america-latina/",
+    "file": "41.json",
+    "title": "América Latina archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/automotriz/",
+    "file": "42.json",
+    "title": "Automotriz archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/automovil/",
+    "file": "43.json",
+    "title": "Automóvil archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/automoviles/",
+    "file": "44.json",
+    "title": "Automóviles archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/autos-deportivos/",
+    "file": "45.json",
+    "title": "Autos Deportivos archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/banos-de-agua-santa/",
+    "file": "46.json",
+    "title": "Baños de Agua Santa archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/camiones-man/",
+    "file": "47.json",
+    "title": "Camiones Man archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/carroll-shelby/",
+    "file": "48.json",
+    "title": "Carroll Shelby archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/chevrolet/",
+    "file": "49.json",
+    "title": "Chevrolet archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/consejos/",
+    "file": "50.json",
+    "title": "consejos archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/cotopaxi/",
+    "file": "51.json",
+    "title": "Cotopaxi archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/cuenca/",
+    "file": "52.json",
+    "title": "Cuenca archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/daf-xb/",
+    "file": "53.json",
+    "title": "DAF XB archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/diesel/",
+    "file": "54.json",
+    "title": "Diesel archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/diseno-ux-ui/",
+    "file": "55.json",
+    "title": "Diseño UX/UI archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/distribucion-urbana/",
+    "file": "56.json",
+    "title": "Distribución Urbana archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/ecuatoriano/",
+    "file": "57.json",
+    "title": "Ecuatoriano archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/eficiencia/",
+    "file": "58.json",
+    "title": "Eficiencia archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/el-futuro-electrico/",
+    "file": "59.json",
+    "title": "El Futuro Eléctrico archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/electricos/",
+    "file": "60.json",
+    "title": "Eléctricos archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/evolucion/",
+    "file": "61.json",
+    "title": "Evolución archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/ford-mustang/",
+    "file": "62.json",
+    "title": "Ford Mustang archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/gac-alto-rendimiento/",
+    "file": "63.json",
+    "title": "GAC Alto Rendimiento archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/gac-gs8/",
+    "file": "64.json",
+    "title": "GAC GS8 archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/gac/",
+    "file": "65.json",
+    "title": "GAC archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/gasolina/",
+    "file": "66.json",
+    "title": "Gasolina archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/hibridos/",
+    "file": "67.json",
+    "title": "Híbridos archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/industria-automotriz/",
+    "file": "68.json",
+    "title": "Industria Automotriz archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/industria/",
+    "file": "69.json",
+    "title": "Industria archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/innovacion/",
+    "file": "70.json",
+    "title": "Innovación archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/lamborghini/",
+    "file": "71.json",
+    "title": "Lamborghini archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/mindo/",
+    "file": "72.json",
+    "title": "Mindo archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/moto/",
+    "file": "73.json",
+    "title": "Moto archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/motor/",
+    "file": "74.json",
+    "title": "Motor archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/motores/",
+    "file": "75.json",
+    "title": "Motores archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/mustang-gt500/",
+    "file": "76.json",
+    "title": "Mustang GT500 archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/neumaticos/",
+    "file": "77.json",
+    "title": "Neumaticos archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/nueva-generacion/",
+    "file": "78.json",
+    "title": "Nueva Generación archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/quilotoa/",
+    "file": "79.json",
+    "title": "Quilotoa archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/santagata/",
+    "file": "80.json",
+    "title": "Sant'Agata archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/sector-automotriz/",
+    "file": "81.json",
+    "title": "Sector Automotriz archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/seguridad/",
+    "file": "82.json",
+    "title": "Seguridad archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/sierra-ecuatoriana/",
+    "file": "83.json",
+    "title": "Sierra Ecuatoriana archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/sinotruk-u70/",
+    "file": "84.json",
+    "title": "Sinotruk U70 archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/sinotruk/",
+    "file": "85.json",
+    "title": "Sinotruk archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/tecnologia/",
+    "file": "86.json",
+    "title": "Tecnología archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/tendencias/",
+    "file": "87.json",
+    "title": "Tendencias archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/tesla/",
+    "file": "88.json",
+    "title": "Tesla archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/todoterreno/",
+    "file": "89.json",
+    "title": "Todoterreno archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/vanguardista/",
+    "file": "90.json",
+    "title": "Vanguardista archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/vehicentro/",
+    "file": "91.json",
+    "title": "Vehicentro archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/vehiculos/",
+    "file": "92.json",
+    "title": "vehículos archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/etiqueta/volkswagen-id-gti-concept/",
+    "file": "93.json",
+    "title": "Volkswagen ID.GTI Concept archivos - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/tesla-revoluciona-el-mercado-automotriz/",
+    "file": "94.json",
+    "title": "Tesla revoluciona el mercado automotriz - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/vehicentro-deslumbra-con-el-lanzamiento-del-su-nuevo-camion-sinotruk-de-2-5-toneladas-el-sinotruk-perfecto-para-la-ciudad/",
+    "file": "95.json",
+    "title": "Vehicentro deslumbra con el lanzamiento del su nuevo camión Sinotruk de 2.5 toneladas: ¡El Sinotruk perfecto para la ciudad! - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/volkswagen-id-gti-concept-un-vistazo-al-futuro/",
+    "file": "96.json",
+    "title": "Volkswagen ID.GTI Concept: Un Vistazo al Futuro - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  }
+]
