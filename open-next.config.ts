@@ -1,5 +1,9 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/static-assets-incremental-cache";
 
-// Configuración del adaptador OpenNext para Cloudflare Workers.
-// Sin caché incremental externa (R2): se puede añadir más adelante si hace falta.
-export default defineCloudflareConfig();
+// Sitio de contenido estático (sin revalidación/ISR): las páginas
+// pre-renderizadas se sirven desde los assets estáticos del Worker.
+// No necesita R2/KV y se mantiene dentro del plan gratuito.
+export default defineCloudflareConfig({
+  incrementalCache: staticAssetsIncrementalCache,
+});
