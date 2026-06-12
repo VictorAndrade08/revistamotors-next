@@ -483,5 +483,25 @@
     "route": "/volkswagen-id-gti-concept-un-vistazo-al-futuro/",
     "file": "96.json",
     "title": "Volkswagen ID.GTI Concept: Un Vistazo al Futuro - Revista de Autos Ecuador Noticias Revista de Carros Ecuador Noticias"
+  },
+  {
+    "route": "/ecuador-record-historico-ventas-vehiculos-2026/",
+    "file": "97.json",
+    "title": "Ecuador rompe récord: más de 50.000 vehículos vendidos en el mejor inicio de año de su historia - Revista Motors Ecuador"
+  },
+  {
+    "route": "/ecuador-mejor-marzo-historia-venta-autos/",
+    "file": "98.json",
+    "title": "La industria automotriz ecuatoriana registró el mejor marzo de su historia - Revista Motors Ecuador"
+  },
+  {
+    "route": "/camiones-buses-electrificados-cifras-historicas-ecuador/",
+    "file": "99.json",
+    "title": "Camiones, buses y vehículos electrificados marcan cifras históricas en Ecuador - Revista Motors Ecuador"
+  },
+  {
+    "route": "/frontera-colombia-ecuador-caos-logistico-aranceles/",
+    "file": "100.json",
+    "title": "La frontera Colombia-Ecuador vive un caos logístico por el anuncio de aranceles bilaterales - Revista Motors Ecuador"
   }
 ]

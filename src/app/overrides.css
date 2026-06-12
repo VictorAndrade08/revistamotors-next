@@ -138,3 +138,12 @@ a.basic-vote-button {
 .basic-percentage-bar {
   background: #ed1c24 !important;
 }
+
+/* Banner superior: que se vea completo en móvil (sin recorte) */
+.top-site-ad .ad-image img,
+.header-banner img {
+  width: 100%;
+  height: auto !important;
+  object-fit: contain;
+  background: #fff;
+}
