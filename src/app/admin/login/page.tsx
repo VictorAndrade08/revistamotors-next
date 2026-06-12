@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Campo de texto: borde fino, foco suave (sin anillo grueso).
+const inputCls =
+  "block w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 " +
+  "px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-300 " +
+  "shadow-none outline-none ring-0 transition-all duration-150 " +
+  "focus:border-[#ed1c24]/70 focus:bg-white " +
+  "focus:shadow-[0_0_0_4px_rgba(237,28,36,0.08)] focus:ring-0";
+
 export default function LoginPage() {
   const router = useRouter();
   const [user, setUser] = useState("");
@@ -45,24 +53,38 @@ export default function LoginPage() {
           </div>
         )}
 
-        <label className="mb-1 block text-sm font-semibold text-gray-700">
+        <label
+          htmlFor="login-user"
+          className="mb-1.5 block text-sm font-semibold text-gray-700"
+        >
           Usuario
         </label>
         <input
+          id="login-user"
+          name="username"
+          autoComplete="username"
+          placeholder="admin"
           value={user}
           onChange={(e) => setUser(e.target.value)}
-          className="mb-4 w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/20"
+          className={inputCls + " mb-4"}
           autoFocus
         />
 
-        <label className="mb-1 block text-sm font-semibold text-gray-700">
+        <label
+          htmlFor="login-pass"
+          className="mb-1.5 block text-sm font-semibold text-gray-700"
+        >
           Clave
         </label>
         <input
+          id="login-pass"
           type="password"
+          name="password"
+          autoComplete="current-password"
+          placeholder="••••••••"
           value={pass}
           onChange={(e) => setPass(e.target.value)}
-          className="mb-6 w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/20"
+          className={inputCls + " mb-6"}
         />
 
         <button
