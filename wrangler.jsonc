@@ -11,5 +11,14 @@
       "database_name": "motros",
       "database_id": "29f7d73f-1653-4121-ac9d-2ee9e6ab225f"
     }
-  ]
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "medias"
+    }
+  ],
+  "vars": {
+    "R2_PUBLIC_URL": "https://pub-25cde2184a5249da96fa022aae951321.r2.dev"
+  }
 }
