@@ -212,12 +212,63 @@ function templatizeHome(body: string, latest: Card[]): string {
   return body;
 }
 
-/** Portada: snapshot del tema + últimas noticias de la BD inyectadas en el hero. */
+type NewsCard = Card & { categorias: string | null };
+
+// Una tarjeta de la cuadrícula "Todas las Noticias" (markup del tema).
+function buildNewsCard(a: NewsCard): string {
+  const href = `/${a.slug}/`;
+  const titulo = escapeHtml(a.titulo);
+  let cat = "";
+  try {
+    cat = (JSON.parse(a.categorias || "[]") as string[])[0] || "";
+  } catch {}
+  const catLink = cat
+    ? `<div class="p-categories p-top"><a class="p-category" href="/categoria/${slugify(
+        cat,
+      )}/" rel="category">${escapeHtml(cat)}</a></div>`
+    : "";
+  return `<div class="p-wrap p-grid p-grid-1">
+  <div class="feat-holder">
+    <div class="p-featured"><a class="p-flink" href="${href}" title="${titulo}"><img class="featured-img wp-post-image" src="${escapeHtml(
+      a.portada || "/icon.webp",
+    )}" alt="${titulo}" loading="lazy" onerror="this.onerror=null;this.src='/icon.webp'"/></a></div>
+    ${catLink}
+  </div>
+  <h3 class="entry-title"><a class="p-url" href="${href}" rel="bookmark">${titulo}</a></h3>
+  <div class="p-meta is-meta"><span class="meta-author">Revista Motors</span> <span class="meta-date"><time class="date published" datetime="${escapeHtml(
+    a.fecha || "",
+  )}">${formatFecha(a.fecha)}</time></span></div>
+</div>`;
+}
+
+// Sección "Todas las Noticias": cuadrícula con todos los artículos de la BD.
+function buildAllNewsSection(arts: NewsCard[]): string {
+  if (!arts.length) return "";
+  const cards = arts.map(buildNewsCard).join("\n");
+  // Misma estructura que las cuadrículas del tema: rb-columns/rb-col-3 en el
+  // block-wrap y los cards dentro de block-inner (así el CSS aplica la grilla).
+  return `<div class="rb-container edge-padding section-todas-noticias" style="margin-top:40px;margin-bottom:40px">
+  <h2 class="heading-title" style="font-size:28px;font-weight:800;color:#0e1116;margin:0 0 22px;display:inline-block;border-bottom:4px solid #ed1c24;padding-bottom:8px">Todas las Noticias</h2>
+  <div class="block-wrap block-grid block-grid-1 rb-columns rb-col-3 rb-tcol-2 rb-mcol-1 is-gap-25">
+    <div class="block-inner">${cards}</div>
+  </div>
+</div>`;
+}
+
+/** Portada: hero con lo reciente + sección "Todas las Noticias" con todos los posts. */
 export async function getHomePage(): Promise<PageData | null> {
   const page = await getPageData("");
   if (!page) return null;
-  const latest = await getLatestArticulos(30);
-  return { ...page, body: templatizeHome(page.body, latest) };
+  const all = await queryParams<NewsCard>(
+    "SELECT titulo, slug, fecha, portada, categorias FROM articulos ORDER BY fecha DESC;",
+    [],
+  );
+  let body = templatizeHome(page.body, all);
+  // Insertar "Todas las Noticias" justo antes del footer.
+  const section = buildAllNewsSection(all);
+  const f = body.indexOf("<footer");
+  body = f >= 0 ? body.slice(0, f) + section + body.slice(f) : body + section;
+  return { ...page, body };
 }
 
 // Últimas noticias de una categoría (por el slug de la URL, p. ej. "resenas").
