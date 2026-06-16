@@ -90,7 +90,7 @@ function assembleArticulo(a: Articulo, latest: Card[]): PageData {
     title: a.titulo,
     bodyClass: shell.bodyClass,
     head,
-    body,
+    body: injectMenuItem(body),
     scripts: shell.scripts,
   };
 }
@@ -271,6 +271,43 @@ export async function getHomePage(): Promise<PageData | null> {
   return { ...page, body };
 }
 
+// Inserta la pestaña "Todas las Noticias" en el menú principal (todas las páginas).
+function injectMenuItem(body: string): string {
+  const idx = body.indexOf('class="main-menu rb-menu');
+  if (idx < 0 || body.indexOf('href="/todas-las-noticias/"') >= 0) return body;
+  const open = body.indexOf(">", idx) + 1;
+  const li =
+    '<li class="menu-item menu-item-type-custom"><a href="/todas-las-noticias/">Todas las Noticias</a></li>';
+  return body.slice(0, open) + li + body.slice(open);
+}
+
+/** Página "/todas-las-noticias/": listado con TODOS los artículos de la BD. */
+async function getTodasNoticias(): Promise<PageData | null> {
+  // Reutiliza el layout de listado de la categoría "Noticias".
+  const rows = await queryParams<{ data: string }>(
+    "SELECT data FROM paginas WHERE slug = 'categoria/noticias' LIMIT 1;",
+    [],
+  );
+  if (!rows.length) return null;
+  const page = JSON.parse(rows[0].data) as PageData;
+  const all = await queryParams<NewsCard>(
+    "SELECT titulo, slug, fecha, portada, categorias FROM articulos ORDER BY fecha DESC;",
+    [],
+  );
+  let body = templatizeHome(page.body, all);
+  body = body.replace(
+    '<h1 class="archive-title">Noticias</h1>',
+    '<h1 class="archive-title">Todas las Noticias</h1>',
+  );
+  body = injectMenuItem(body);
+  return {
+    ...page,
+    route: "/todas-las-noticias/",
+    title: "Todas las Noticias",
+    body,
+  };
+}
+
 // Últimas noticias de una categoría (por el slug de la URL, p. ej. "resenas").
 // Si hay pocas de esa categoría, completa con las más recientes en general.
 async function latestForCategory(catSlug: string): Promise<Card[]> {
@@ -293,6 +330,9 @@ async function latestForCategory(catSlug: string): Promise<Card[]> {
 
 /** Devuelve la página de un slug ("" = home), o null si no existe. */
 export async function getPageData(slug: string): Promise<PageData | null> {
+  // Página propia "Todas las Noticias".
+  if (slug === "todas-las-noticias") return getTodasNoticias();
+
   // 1) Página original (HTML idéntico al snapshot).
   const pages = await queryParams<{ data: string }>(
     "SELECT data FROM paginas WHERE slug = ?1 LIMIT 1;",
@@ -301,13 +341,14 @@ export async function getPageData(slug: string): Promise<PageData | null> {
   if (pages.length) {
     try {
       const page = JSON.parse(pages[0].data) as PageData;
+      let body = page.body;
       // Páginas de categoría: llenar sus tarjetas con noticias recientes.
       if (slug.startsWith("categoria/")) {
         const catSlug = slug.split("/")[1] ?? "";
-        const latest = await latestForCategory(catSlug);
-        return { ...page, body: templatizeHome(page.body, latest) };
+        body = templatizeHome(body, await latestForCategory(catSlug));
       }
-      return page;
+      body = injectMenuItem(body); // pestaña "Todas las Noticias" en todas las páginas
+      return { ...page, body };
     } catch {
       return null;
     }
