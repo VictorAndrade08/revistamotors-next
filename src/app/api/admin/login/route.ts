@@ -5,36 +5,16 @@ import {
   ADMIN_PASS,
   ADMIN_SECRET,
   ADMIN_COOKIE,
-  adminConfigOk,
 } from "@/lib/admin-config";
-import { createToken, safeEqual } from "@/lib/session";
 
 export const runtime = "edge";
 
 export async function POST(req: Request) {
-  // Fail-closed: sin secretos bien configurados no se permite iniciar sesión.
-  if (!adminConfigOk()) {
-    return NextResponse.json(
-      { error: "El panel no está configurado (faltan ADMIN_PASS/ADMIN_SECRET)" },
-      { status: 500 },
-    );
-  }
-
-  let body: { user?: unknown; pass?: unknown };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Petición inválida" }, { status: 400 });
-  }
-  const user = typeof body.user === "string" ? body.user : "";
-  const pass = typeof body.pass === "string" ? body.pass : "";
-
-  if (safeEqual(user, ADMIN_USER) && safeEqual(pass, ADMIN_PASS)) {
-    const token = await createToken(ADMIN_SECRET);
+  const { user, pass } = await req.json();
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
     const c = await cookies();
-    c.set(ADMIN_COOKIE, token, {
+    c.set(ADMIN_COOKIE, ADMIN_SECRET, {
       httpOnly: true,
-      secure: true,
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 8,

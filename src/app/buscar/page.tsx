@@ -1,25 +1,67 @@
+// Los JSON se leen con fs (no import): contienen caracteres que rompen la
+// serialización JSON de webpack. La página es estática, solo corre en build.
+import fs from "node:fs/promises";
+import path from "node:path";
 import ThemeScripts from "@/components/ThemeScripts";
 import SearchFilter from "@/components/SearchFilter";
-import { getSearchData, type SearchShell, type SearchItem } from "@/site-data/db-loader";
-import { escapeHtml } from "@/lib/text";
+import type { ScriptEntry } from "@/site-data/loader";
 
-// El buscador se sirve desde D1 (runtime edge): las noticias creadas en el
-// panel quedan buscables al instante, junto con las originales.
-export const runtime = "edge";
-export const metadata = { title: "Buscar" };
+type Shell = {
+  bodyClass: string;
+  head: string;
+  prefix: string;
+  suffix: string;
+  cardTemplate: string;
+  scripts: ScriptEntry[];
+};
 
-function buildCard(shell: SearchShell, it: SearchItem): string {
-  return shell.cardTemplate
-    .replaceAll("{{URL}}", escapeHtml(it.url))
-    .replaceAll("{{TITLE}}", escapeHtml(it.title))
-    .replaceAll("{{THUMB}}", escapeHtml(it.thumb))
-    .replaceAll("{{EXCERPT}}", escapeHtml(it.excerpt))
-    .replaceAll("{{FIND}}", escapeHtml(it.find));
+async function readJson<T>(file: string): Promise<T> {
+  const p = path.join(process.cwd(), "src", "site-data", file);
+  return JSON.parse(await fs.readFile(p, "utf-8")) as T;
 }
 
+type Item = {
+  title: string;
+  url: string;
+  thumb: string;
+  excerpt: string;
+  text: string;
+};
+
+function esc(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function findKey(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildCard(shell: Shell, it: Item): string {
+  const find = findKey(`${it.title} ${it.text}`);
+  return shell.cardTemplate
+    .replaceAll("{{URL}}", esc(it.url))
+    .replaceAll("{{TITLE}}", esc(it.title))
+    .replaceAll("{{THUMB}}", esc(it.thumb))
+    .replaceAll("{{EXCERPT}}", esc(it.excerpt))
+    .replaceAll("{{FIND}}", esc(find));
+}
+
+export const metadata = { title: "Buscar" };
+
 export default async function BuscarPage() {
-  const { shell, items } = await getSearchData();
-  const cards = items.map((it) => buildCard(shell, it)).join("\n");
+  const shell = await readJson<Shell>("search-shell.json");
+  const index = await readJson<Item[]>("search-index.json");
+  const cards = index.map((it) => buildCard(shell, it)).join("\n");
   const html = shell.prefix + cards + shell.suffix;
 
   return (

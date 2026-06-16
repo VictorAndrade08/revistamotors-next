@@ -27,6 +27,11 @@ interface D1Database {
   prepare(sql: string): D1Prepared;
 }
 
+export function esc(v: string | null | undefined): string {
+  if (v === null || v === undefined) return "NULL";
+  return "'" + String(v).replace(/'/g, "''") + "'";
+}
+
 function getDb(): D1Database | null {
   try {
     const env = getRequestContext().env as unknown as { DB?: D1Database };
@@ -72,9 +77,19 @@ export async function query<T = Row>(sql: string): Promise<T[]> {
   return (await rest(sql)) as T[];
 }
 
-// Todas las escrituras usan parámetros (?1, ?2…): el valor viaja como dato,
-// no concatenado al SQL. Evita inyección y el límite de tamaño de sentencia
-// de D1 (importante para HTML de artículos e imágenes en base64).
+export async function execSql(sql: string): Promise<void> {
+  const db = getDb();
+  if (db) {
+    // Una sola sentencia: prepare().run() (no .exec(), que parte por \n y
+    // rompería el HTML multilínea de los artículos).
+    await db.prepare(sql).run();
+    return;
+  }
+  await rest(sql);
+}
+
+// Variantes con parámetros (?1, ?2…), para valores grandes (p. ej. imágenes):
+// D1 limita el tamaño de la sentencia SQL, así que los datos van como params.
 export async function queryParams<T = Row>(
   sql: string,
   params: unknown[],

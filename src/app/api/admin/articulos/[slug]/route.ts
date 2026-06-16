@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { queryParams, runParams } from "@/lib/d1";
+import { query, execSql, esc } from "@/lib/d1";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -9,9 +9,8 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const rows = await queryParams(
-    "SELECT * FROM articulos WHERE slug = ?1 LIMIT 1;",
-    [slug],
+  const rows = await query(
+    `SELECT * FROM articulos WHERE slug = ${esc(slug)} LIMIT 1;`,
   );
   if (!rows.length) {
     return NextResponse.json({ error: "No existe" }, { status: 404 });
@@ -24,6 +23,6 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  await runParams("DELETE FROM articulos WHERE slug = ?1;", [slug]);
+  await execSql(`DELETE FROM articulos WHERE slug = ${esc(slug)};`);
   return NextResponse.json({ ok: true });
 }

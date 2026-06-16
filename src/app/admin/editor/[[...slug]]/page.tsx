@@ -4,7 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import RichEditor from "@/components/admin/RichEditor";
 import TagPicker from "@/components/admin/TagPicker";
-import { slugify } from "@/lib/text";
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export default function EditorPage() {
   const params = useParams();

@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPageData } from "@/site-data/db-loader";
+import { allRoutes, getPage, routeToSlug } from "@/site-data/loader";
 import SitePage from "@/components/SitePage";
 
-// Todas las páginas (originales + noticias del panel) se sirven desde D1 en el
-// runtime edge. Así, crear una noticia en /admin la publica al instante en su
-// URL, sin regenerar archivos ni hacer rebuild.
-export const runtime = "edge";
+// Solo se sirven las rutas conocidas del sitio; el resto devuelve 404.
+// (La portada "/" vive en src/app/page.tsx — next-on-pages no soporta
+// catch-all opcional [[...slug]] con SSG.)
+export const dynamicParams = false;
 
 type Params = { slug: string[] };
+
+export function generateStaticParams(): Params[] {
+  return allRoutes()
+    .map((r) => ({ slug: routeToSlug(r.route) }))
+    .filter((p) => p.slug.length > 0);
+}
 
 export async function generateMetadata({
   params,
@@ -16,7 +22,7 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getPageData(slug.join("/"));
+  const page = await getPage(slug);
   return { title: page?.title || "Revista Motors Ecuador" };
 }
 
@@ -26,7 +32,7 @@ export default async function Page({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const page = await getPageData(slug.join("/"));
+  const page = await getPage(slug);
   if (!page) notFound();
   return <SitePage page={page} />;
 }

@@ -42,7 +42,11 @@ export default function ThemeScripts({ scripts }: { scripts: ScriptEntry[] }) {
         if (entry.src) {
           await loadExternal(entry.src);
         } else if (entry.code) {
-          runInline(entry.code);
+          try {
+            runInline(entry.code);
+          } catch {
+            /* ignora errores de un script puntual */
+          }
         }
       }
     })();
