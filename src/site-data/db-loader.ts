@@ -14,9 +14,15 @@ function decodeB64<T>(b64: string): T {
 type Shell = {
   bodyClass: string;
   head: string;
-  prefix: string;
-  suffix: string;
+  prefix: string; // hasta el interior de <entry-content> (incluye cabecera, imagen, título…)
+  suffix: string; // desde el cierre de entry-content (tags, autor, sidebar, footer)
   scripts: PageData["scripts"];
+  // Valores de la plantilla que se reemplazan por los de la noticia:
+  title: string;
+  slug: string;
+  featuredSrc: string;
+  dateText: string;
+  datetimeISO: string;
 };
 
 // Decodifica el marco del tema (base64 UTF-8) una sola vez.
@@ -54,32 +60,37 @@ function formatFecha(iso: string | null): string {
   return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
-/** Ensambla una noticia de `articulos` dentro del marco del tema. */
-function assembleArticulo(a: Articulo): PageData {
+/**
+ * Ensambla una noticia con el layout COMPLETO del tema (cabecera, breadcrumb,
+ * autor, compartir, barra lateral con encuesta y "últimos posts"). El contenido
+ * se inyecta en el `entry-content` y se reemplazan los valores de la plantilla
+ * (título, imagen, fecha, enlaces) por los de la noticia.
+ */
+function assembleArticulo(a: Articulo, latest: Card[]): PageData {
   const titulo = escapeHtml(a.titulo);
-  const featured = a.portada
-    ? `<figure class="single-featured-image first-img-wrap"><img class="attachment-large size-large wp-post-image" src="${escapeHtml(
-        a.portada,
-      )}" alt="${titulo}" decoding="async" fetchpriority="high"/></figure>`
-    : "";
-  const inner = `<article class="post type-post status-publish format-standard has-post-thumbnail" itemscope="" itemtype="https://schema.org/Article">
-  <header class="single-header">
-    <h1 class="entry-title" itemprop="headline">${titulo}</h1>
-    <div class="entry-meta is-meta"><span class="meta-date"><time class="entry-date published" datetime="${escapeHtml(
-      a.fecha ?? "",
-    )}">${formatFecha(a.fecha)}</time></span></div>
-  </header>
-  ${featured}
-  <div class="e-ct-outer"><div class="entry-content rbct clearfix" itemprop="articleBody">${
-    a.html ?? ""
-  }</div></div>
-</article>`;
+  let body = shell.prefix + (a.html ?? "") + shell.suffix;
+  body = body.split(shell.title).join(titulo);
+  body = body.split(shell.slug).join(a.slug);
+  if (a.portada) body = body.split(shell.featuredSrc).join(escapeHtml(a.portada));
+  body = body.split(shell.dateText).join(formatFecha(a.fecha));
+  if (a.fecha) body = body.split(shell.datetimeISO).join(a.fecha);
+  body = body.replace(/\s(?:srcset|data-srcset)="[^"]*"/g, ""); // evita imágenes responsive viejas
+  // Tarjetas de relacionados (texto) y de la barra lateral (con miniatura)
+  // -> últimas noticias, para que el post se vea como los demás.
+  const related = latest.filter((c) => c.slug !== a.slug);
+  body = replaceCards(body, "p-list-inline", related);
+  body = replaceCards(body, "p-list-small-2", related);
+
+  // og:title / og:image en el head, por noticia.
+  let head = shell.head.split(shell.title).join(titulo);
+  if (a.portada) head = head.split(shell.featuredSrc).join(escapeHtml(a.portada));
+
   return {
     route: `/${a.slug}/`,
     title: a.titulo,
     bodyClass: shell.bodyClass,
-    head: shell.head,
-    body: shell.prefix + inner + shell.suffix,
+    head,
+    body,
     scripts: shell.scripts,
   };
 }
@@ -129,7 +140,9 @@ function findCards(html: string): { start: number; end: number; cls: string }[] 
 function fillCard(seg: string, art: Card): string {
   const href = `/${art.slug}/`;
   const titulo = escapeHtml(art.titulo);
-  const oldHref = (seg.match(/class="p-flink"[^>]*href="([^"]+)"/) || [])[1];
+  // El enlace puede estar en .p-flink (con imagen) o solo en .p-url (lista simple).
+  const oldHref = (seg.match(/class="p-flink"[^>]*href="([^"]+)"/) ||
+    seg.match(/class="p-url"[^>]*href="([^"]+)"/) || [])[1];
   if (oldHref) seg = seg.split(`"${oldHref}"`).join(`"${href}"`);
   seg = seg.replace(/(class="p-flink"[^>]*title=")[^"]*(")/, `$1${titulo}$2`);
   seg = seg.replace(/(class="p-url"[^>]*>)[^<]*(<)/, `$1${titulo}$2`);
@@ -142,6 +155,21 @@ function fillCard(seg: string, art: Card): string {
   seg = seg.replace(/\s(?:srcset|data-srcset)="[^"]*"/g, ""); // evita imágenes responsive viejas
   seg = seg.replace(/(<time[^>]*>)[^<]*(<\/time>)/, `$1${formatFecha(art.fecha)}$2`);
   return seg;
+}
+
+// Reemplaza las tarjetas de una clase dada (en orden de aparición) por una lista
+// de noticias, conservando el maquetado. De atrás hacia delante para no invalidar
+// los índices.
+function replaceCards(body: string, clsMatch: string, arts: Card[]): string {
+  const jobs = findCards(body)
+    .filter((c) => c.cls.includes(clsMatch))
+    .map((c, i) => ({ ...c, art: arts[i] }))
+    .filter((j) => j.art);
+  jobs.sort((a, b) => b.start - a.start);
+  for (const j of jobs) {
+    body = body.slice(0, j.start) + fillCard(body.slice(j.start, j.end), j.art) + body.slice(j.end);
+  }
+  return body;
 }
 
 // Inyecta las últimas noticias en el hero (3 slides) y las 2 tarjetas
@@ -190,7 +218,10 @@ export async function getPageData(slug: string): Promise<PageData | null> {
     "SELECT slug, titulo, fecha, portada, extracto, html FROM articulos WHERE slug = ?1 LIMIT 1;",
     [slug],
   );
-  if (arts.length) return assembleArticulo(arts[0]);
+  if (arts.length) {
+    const latest = await getLatestArticulos(10);
+    return assembleArticulo(arts[0], latest);
+  }
 
   return null;
 }

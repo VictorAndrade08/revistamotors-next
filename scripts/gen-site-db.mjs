@@ -12,17 +12,43 @@ const routes = JSON.parse(
   fs.readFileSync(path.join(ROOT, "src", "site-data", "routes.json"), "utf8"),
 );
 
-// --- 1) Marco del tema (de un single-post real) ---
-const base = JSON.parse(fs.readFileSync(path.join(PDIR, "1.json"), "utf8"));
+// --- 1) Marco del tema (de un single-post real y COMPLETO con sidebar) ---
+// Usamos un post real (97.json) y partimos el contenido en el `entry-content`,
+// para conservar TODO el layout (breadcrumb, autor, compartir, barra lateral con
+// encuesta y "últimos posts"). Solo se reemplazan título, imagen, fecha,
+// contenido y las tarjetas relacionadas (ver assembleArticulo en db-loader.ts).
+const TEMPLATE_FILE = "97.json"; // ecuador-record (layout estándar con sidebar)
+const TEMPLATE_SLUG = routes.find((r) => r.file === TEMPLATE_FILE).route.replace(/^\/+|\/+$/g, "");
+const base = JSON.parse(fs.readFileSync(path.join(PDIR, TEMPLATE_FILE), "utf8"));
 const b = base.body;
-const artOpen = b.indexOf("<article ");
-const artClose = b.indexOf("</article>") + "</article>".length;
+
+// Límites del interior de entry-content (equilibrando <div>/</div>).
+const ecOpen = b.indexOf('<div class="entry-content rbct');
+const ecInnerStart = b.indexOf(">", ecOpen) + 1;
+let depth = 1;
+let p = ecInnerStart;
+while (p < b.length && depth > 0) {
+  const o = b.indexOf("<div", p);
+  const c = b.indexOf("</div>", p);
+  if (c < 0) break;
+  if (o >= 0 && o < c) { depth++; p = o + 4; } else { depth--; p = c + 6; }
+}
+const ecInnerEnd = p - 6;
+
+// Valores de la plantilla que assembleArticulo reemplazará por los de la noticia.
+const hdr = b.indexOf("single-header");
+const featuredSrc = (b.slice(b.lastIndexOf("<img", b.indexOf("wp-post-image", hdr)), b.indexOf("wp-post-image", hdr) + 400).match(/\ssrc="([^"]+)"/) || [])[1];
 const shell = {
   bodyClass: base.bodyClass,
   head: base.head,
-  prefix: b.slice(0, artOpen), // header + nav + wrappers
-  suffix: b.slice(artClose), // cierre + footer
+  prefix: b.slice(0, ecInnerStart), // header, breadcrumb, imagen, título, fecha, <entry-content>
+  suffix: b.slice(ecInnerEnd), // tags, autor, sidebar (encuesta + relacionados), footer
   scripts: base.scripts,
+  title: (b.slice(hdr, hdr + 3000).match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1].replace(/<[^>]*>/g, "").trim(),
+  slug: TEMPLATE_SLUG,
+  featuredSrc,
+  dateText: (b.match(/entry-date[^>]*>([^<]+)</) || [])[1],
+  datetimeISO: (b.match(/entry-date"[^>]*datetime="([^"]+)"/) || [])[1],
 };
 const b64 = Buffer.from(JSON.stringify(shell), "utf8").toString("base64");
 fs.writeFileSync(
