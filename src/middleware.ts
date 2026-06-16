@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE, ADMIN_SECRET } from "@/lib/admin-config";
+import { verifyToken } from "@/lib/session";
 
 // Protege /admin y /api/admin (excepto el login).
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isLogin =
@@ -12,7 +13,7 @@ export function middleware(req: NextRequest) {
   if (isLogin) return NextResponse.next();
 
   const token = req.cookies.get(ADMIN_COOKIE)?.value;
-  if (token !== ADMIN_SECRET) {
+  if (!(await verifyToken(token, ADMIN_SECRET))) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
