@@ -1,6 +1,6 @@
 import "server-only";
 import { queryParams } from "@/lib/d1";
-import { escapeHtml, normalizeKey } from "@/lib/text";
+import { escapeHtml, normalizeKey, slugify } from "@/lib/text";
 import { ARTICLE_SHELL_B64 } from "./article-shell";
 import { SEARCH_SHELL_B64 } from "./search-shell";
 import type { PageData, ScriptEntry } from "./loader";
@@ -220,6 +220,26 @@ export async function getHomePage(): Promise<PageData | null> {
   return { ...page, body: templatizeHome(page.body, latest) };
 }
 
+// Últimas noticias de una categoría (por el slug de la URL, p. ej. "resenas").
+// Si hay pocas de esa categoría, completa con las más recientes en general.
+async function latestForCategory(catSlug: string): Promise<Card[]> {
+  const all = await queryParams<Card & { categorias: string | null }>(
+    "SELECT titulo, slug, fecha, portada, categorias FROM articulos ORDER BY fecha DESC LIMIT 40;",
+    [],
+  );
+  const inCat = all.filter((a) => {
+    try {
+      return (JSON.parse(a.categorias || "[]") as string[]).some(
+        (c) => slugify(c) === catSlug,
+      );
+    } catch {
+      return false;
+    }
+  });
+  const list = inCat.length >= 5 ? inCat : all;
+  return list.map(({ titulo, slug, fecha, portada }) => ({ titulo, slug, fecha, portada }));
+}
+
 /** Devuelve la página de un slug ("" = home), o null si no existe. */
 export async function getPageData(slug: string): Promise<PageData | null> {
   // 1) Página original (HTML idéntico al snapshot).
@@ -229,7 +249,14 @@ export async function getPageData(slug: string): Promise<PageData | null> {
   );
   if (pages.length) {
     try {
-      return JSON.parse(pages[0].data) as PageData;
+      const page = JSON.parse(pages[0].data) as PageData;
+      // Páginas de categoría: llenar sus tarjetas con noticias recientes.
+      if (slug.startsWith("categoria/")) {
+        const catSlug = slug.split("/")[1] ?? "";
+        const latest = await latestForCategory(catSlug);
+        return { ...page, body: templatizeHome(page.body, latest) };
+      }
+      return page;
     } catch {
       return null;
     }
