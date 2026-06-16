@@ -172,16 +172,38 @@ function replaceCards(body: string, clsMatch: string, arts: Card[]): string {
   return body;
 }
 
-// Inyecta las últimas noticias en el hero (3 slides) y las 2 tarjetas
-// destacadas de la portada. El resto del maquetado se conserva intacto.
+// Llena TODA la portada con las últimas noticias, de más nuevas a más antiguas:
+//  - hero (3 slides) = las 3 más recientes
+//  - 2 tarjetas destacadas = las 2 siguientes
+//  - resto de secciones (grids/listas de abajo) = las siguientes, en orden
+// Se salta el desplegable de notificaciones del header (tarjetas antes del hero).
 function templatizeHome(body: string, latest: Card[]): string {
   if (!latest.length) return body;
   const cards = findCards(body);
   const hero = cards.filter((c) => c.cls.includes("p-overlay-1")).slice(0, 3);
   const feat = cards.filter((c) => c.cls.includes("p-overlay-2")).slice(0, 2);
+  const heroStart = hero.length ? hero[0].start : 0;
+
   const jobs: { start: number; end: number; art: Card }[] = [];
-  hero.forEach((c, i) => latest[i] && jobs.push({ ...c, art: latest[i] }));
-  feat.forEach((c, i) => latest[3 + i] && jobs.push({ ...c, art: latest[3 + i] }));
+  const done = new Set<number>();
+  const assign = (c: { start: number; end: number }, art: Card | undefined) => {
+    if (!art) return;
+    jobs.push({ start: c.start, end: c.end, art });
+    done.add(c.start);
+  };
+
+  hero.forEach((c, i) => assign(c, latest[i])); // 0,1,2
+  feat.forEach((c, i) => assign(c, latest[3 + i])); // 3,4
+
+  // Resto de tarjetas (después del hero, no usadas aún) -> siguientes noticias.
+  let n = 5;
+  for (const c of cards) {
+    if (c.start < heroStart || done.has(c.start)) continue;
+    if (!latest[n]) break;
+    assign(c, latest[n]);
+    n++;
+  }
+
   // De atrás hacia delante para no invalidar los índices al sustituir.
   jobs.sort((a, b) => b.start - a.start);
   for (const j of jobs) {
@@ -194,7 +216,7 @@ function templatizeHome(body: string, latest: Card[]): string {
 export async function getHomePage(): Promise<PageData | null> {
   const page = await getPageData("");
   if (!page) return null;
-  const latest = await getLatestArticulos(5);
+  const latest = await getLatestArticulos(30);
   return { ...page, body: templatizeHome(page.body, latest) };
 }
 
