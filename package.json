@@ -9,7 +9,9 @@
     "lint": "eslint",
     "pages:build": "next-on-pages",
     "preview": "next-on-pages && wrangler pages dev",
-    "deploy": "next-on-pages && wrangler pages deploy"
+    "deploy": "next-on-pages && wrangler pages deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
@@ -34,6 +36,7 @@
     "eslint-config-next": "^15.5.2",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vitest": "^2.1.9",
     "wrangler": "^4.100.0"
   }
 }
