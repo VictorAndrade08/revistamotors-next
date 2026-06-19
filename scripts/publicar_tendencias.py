@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""
+Publica las 7 noticias de tendencia de REVISTA MOTORS (superdeportivos).
+- Convierte las imágenes web (1536x1024) a WebP y las sube a R2 (revistamottros/blog/).
+- Genera un .sql con los INSERT (texto ampliado, categorías, fechas escalonadas).
+
+Programación: post 1 sale YA (fecha = ahora); luego 1 por día a las 14:00 UTC
+(09:00 Ecuador). El sitio muestra cada post solo cuando su fecha llega.
+"""
+import io
+from pathlib import Path
+import boto3
+from botocore.config import Config
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parent.parent
+UNZIP = Path("/tmp/archivo_unzip/02 - Imagenes Web (limpias)/Revista Motors")
+PREFIX = "revistamottros/blog/"
+PUBLIC = "https://pub-25cde2184a5249da96fa022aae951321.r2.dev/"
+
+
+def load_env():
+    env = {}
+    for line in (ROOT / ".env.local").read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            env[k.strip()] = v.strip()
+    return env
+
+
+E = load_env()
+s3 = boto3.client(
+    "s3",
+    endpoint_url=E["R2_ENDPOINT"],
+    aws_access_key_id=E["R2_ACCESS_KEY_ID"],
+    aws_secret_access_key=E["R2_SECRET_ACCESS_KEY"],
+    config=Config(signature_version="s3v4", region_name="auto", max_pool_connections=16),
+)
+BUCKET = E["R2_BUCKET_NAME"]
+
+POSTS = [
+    {
+        "slug": "mclaren-w1-1275-cv-nueva-dinastia",
+        "img": "01 - McLaren W1.png",
+        "fecha": "AHORA",
+        "cats": ["Noticias", "Destacado"],
+        "tags": ["mclaren", "mclaren-w1", "hypercar", "hibrido"],
+        "titulo": "McLaren W1: 1.275 CV y el inicio de una nueva dinastía",
+        "extracto": "Tras el F1 y el P1 llega el W1, el McLaren de calle más potente jamás construido, con 1.275 CV híbridos. Woking acaba de subir la apuesta frente a Maranello.",
+        "html": """<p>McLaren completa su linaje más sagrado. Tras el legendario <strong>F1</strong> y el revolucionario <strong>P1</strong> llega el <strong>W1</strong>, el McLaren de calle más potente jamás construido, con una cifra que impone respeto: <strong>1.275 CV</strong>.</p>
+<h2>La trilogía sagrada, completa</h2>
+<p>Pocas marcas tienen un linaje tan reverenciado. El F1 redefinió el superdeportivo en los años 90; el P1 abrió la era híbrida de altísimo rendimiento. El W1 cierra el círculo y lo lleva al extremo: híbrido enchufable, fanáticamente ligero y diseñado con una sola obsesión, el rendimiento absoluto.</p>
+<h2>Ingeniería sin concesiones</h2>
+<p>Cada componente del W1 responde a esa fijación. La aerodinámica activa, el chasis de fibra de carbono y el tren motriz electrificado trabajan juntos para que el coche no busque solo velocidad bruta, sino redefinir qué puede ser un <em>hypercar</em> en plena era de la electrificación.</p>
+<p>El mensaje hacia su eterno rival es directo: Maranello tiene rival. Con el W1, Woking acaba de subir la apuesta y deja claro que la era híbrida no significa renunciar a la emoción, sino multiplicarla.</p>""",
+    },
+    {
+        "slug": "bugatti-tourbillon-relevo-chiron-v16",
+        "img": "02 - Bugatti Tourbillon.png",
+        "fecha": "PROGRAMADO:2026-06-20T14:00:00Z",
+        "cats": ["Reseñas"],
+        "tags": ["bugatti", "tourbillon", "v16", "hypercar"],
+        "titulo": "Bugatti Tourbillon: el majestuoso relevo del Chiron",
+        "extracto": "El Tourbillon sucede al Chiron con un V16 atmosférico de 8.3 litros y tres motores eléctricos para cerca de 1.800 CV, sin un solo turbo. Arte que se conduce.",
+        "html": """<p>Bugatti cierra una era y abre otra. El <strong>Tourbillon</strong> sucede al Chiron con una receta que mezcla tradición y futuro: un <strong>V16 atmosférico de 8.3 litros</strong> acompañado de <strong>tres motores eléctricos</strong> para una potencia cercana a los <strong>1.800 CV</strong>, sin un solo turbo.</p>
+<h2>Un corazón irrepetible</h2>
+<p>Mientras la industria reduce cilindros, Bugatti hace lo contrario: dieciséis cilindros en aspiración natural, un motor que sube de vueltas con una pureza mecánica casi extinta. Los tres motores eléctricos no están para disimular carencias, sino para añadir empuje instantáneo y respuesta inmediata.</p>
+<h2>Alta relojería sobre ruedas</h2>
+<p>Su nombre, tomado de la <em>alta relojería</em>, no es casualidad: cada detalle del Tourbillon es una pieza de ingeniería pensada para emocionar durante generaciones. El tablero, mecánico y analógico, parece salido de un taller de relojes suizos.</p>
+<p>Es, sencillamente, arte que se conduce: un objeto diseñado no para una temporada, sino para trascender el tiempo, como las grandes complicaciones relojeras que lo inspiran.</p>""",
+    },
+    {
+        "slug": "czinger-record-laguna-seca",
+        "img": "03 - Czinger Laguna Seca.png",
+        "fecha": "PROGRAMADO:2026-06-21T14:00:00Z",
+        "cats": ["Noticias"],
+        "tags": ["czinger", "record", "laguna-seca", "impresion-3d"],
+        "titulo": "Czinger pulveriza el récord de Laguna Seca",
+        "extracto": "El Czinger giró Laguna Seca en 1:25.44 y destronó al McLaren Senna. Su secreto: chasis impreso en 3D, híbrido extremo y aerodinámica optimizada por IA.",
+        "html": """<p>Un nombre relativamente nuevo acaba de reescribir la historia. El <strong>Czinger</strong> giró el mítico circuito de <strong>Laguna Seca</strong> en un demoledor <strong>1:25.44</strong>, destronando al McLaren Senna como el auto de producción más rápido en hacerlo.</p>
+<h2>Fabricación del futuro</h2>
+<p>¿Su secreto? Un chasis fabricado mediante <strong>impresión 3D</strong>, una técnica que permite estructuras imposibles de lograr con métodos tradicionales: más ligeras, más rígidas y optimizadas en cada gramo. No es un truco de marketing, es el núcleo de su ventaja.</p>
+<h2>Inteligencia artificial al volante del diseño</h2>
+<p>A ese chasis se suman un tren motriz híbrido de altísimo desempeño y una <em>aerodinámica optimizada por inteligencia artificial</em>, capaz de generar carga aerodinámica donde un ingeniero humano quizá no la habría buscado.</p>
+<p>El resultado es una declaración de principios: el futuro de la fabricación de superdeportivos ya está corriendo, y va a fondo. Czinger no solo batió un récord; mostró cómo se construirán las máquinas más rápidas de la próxima década.</p>""",
+    },
+    {
+        "slug": "porsche-mission-x-heredero-918",
+        "img": "04 - Porsche Mission X.png",
+        "fecha": "PROGRAMADO:2026-06-22T14:00:00Z",
+        "cats": ["Noticias"],
+        "tags": ["porsche", "mission-x", "nurburgring", "918-spyder"],
+        "titulo": "Porsche Mission X: el heredero del 918 va por todo",
+        "extracto": "El Mission X, sucesor del 918 Spyder, llega con arquitectura de 900 V, relación peso-potencia de un caballo por kilo y un objetivo: el récord del Nürburgring.",
+        "html": """<p>Porsche prepara su próximo golpe sobre la mesa. El <strong>Mission X</strong>, llamado a suceder al legendario <strong>918 Spyder</strong>, llega con arquitectura de <strong>900 voltios</strong>, una relación peso-potencia que apunta a <strong>un caballo por cada kilo</strong> y un objetivo inequívoco.</p>
+<h2>La obsesión del «infierno verde»</h2>
+<p>Ese objetivo tiene nombre propio: recuperar el récord del auto de calle más rápido del <strong>Nürburgring</strong>. En Stuttgart, el legendario circuito alemán es mucho más que una pista: es el banco de pruebas donde se mide la reputación de un fabricante.</p>
+<h2>Receta de resistencia y futuro</h2>
+<p>Para lograrlo, el Mission X combina aerodinámica activa, puertas tipo <em>Le Mans</em> que se abren hacia arriba y adelante, y carga ultrarrápida heredada de la competición. Cada elemento está pensado para el cronómetro, pero también para recordar el ADN de los Porsche de resistencia.</p>
+<p>Con él, Stuttgart quiere dejar claro quién manda cuando se trata de unir electrificación y prestaciones de circuito. El heredero del 918 no llega a conformarse: llega a por todo.</p>""",
+    },
+    {
+        "slug": "lamborghini-temerario-adios-huracan",
+        "img": "05 - Lamborghini Temerario.png",
+        "fecha": "PROGRAMADO:2026-06-23T14:00:00Z",
+        "cats": ["Reseñas"],
+        "tags": ["lamborghini", "temerario", "huracan", "v8-hibrido"],
+        "titulo": "Lamborghini Temerario: el feroz adiós al Huracán",
+        "extracto": "El Temerario sucede al Huracán con un V8 biturbo de 4.0 litros y tres motores eléctricos, cerca de 900 CV y un régimen de giro que pone la piel de gallina.",
+        "html": """<p>El toro se reinventa sin perder su esencia. El <strong>Lamborghini Temerario</strong> llega para suceder al exitoso <strong>Huracán</strong> con un corazón completamente nuevo: un <strong>V8 biturbo de 4.0 litros</strong> asistido por <strong>tres motores eléctricos</strong>, para una potencia cercana a los <strong>900 CV</strong>.</p>
+<h2>Un motor que pone la piel de gallina</h2>
+<p>Lo que distingue al Temerario no es solo la cifra de potencia, sino cómo la entrega: un régimen de giro altísimo que devuelve la emoción aguda que los puristas temían perder con la llegada del turbo y la electrificación. La banda sonora sigue siendo inconfundiblemente Lamborghini.</p>
+<h2>Híbrido, pero salvaje</h2>
+<p>Los tres motores eléctricos no domestican al toro: lo hacen más rápido y más preciso, llenando los huecos de par y afilando la respuesta en curva. Híbrido, salvaje e <em>inconfundiblemente</em> de Sant'Agata.</p>
+<p>El Temerario demuestra que la electrificación puede convivir con la emoción más pura. No es una despedida nostálgica del Huracán, sino una promesa: lo mejor del toro aún está por venir.</p>""",
+    },
+    {
+        "slug": "xiaomi-su7-ultra-record-nurburgring",
+        "img": "06 - Xiaomi Nurburgring.png",
+        "fecha": "PROGRAMADO:2026-06-24T14:00:00Z",
+        "cats": ["Noticias"],
+        "tags": ["xiaomi", "su7-ultra", "nurburgring", "electrico"],
+        "titulo": "Xiaomi sacude el Nürburgring (sí, Xiaomi)",
+        "extracto": "El Xiaomi SU7 Ultra se convirtió en el eléctrico de producción más rápido del Nürburgring y el YU7 GT arrasó el récord de los SUV. China reescribe el tablero del lujo.",
+        "html": """<p>El terremoto en el mundo de los superdeportivos vino desde donde menos se esperaba. El <strong>Xiaomi SU7 Ultra</strong> se convirtió en el auto eléctrico de producción más rápido del <strong>Nürburgring</strong>, mientras su hermano <strong>YU7 GT</strong> arrasaba con el récord de los SUV.</p>
+<h2>De los teléfonos a la pista</h2>
+<p>Hace pocos años, asociar a Xiaomi con un récord en el «infierno verde» habría sonado a broma. Hoy es realidad. La marca conocida por sus teléfonos demostró que el conocimiento en baterías, software y electrónica de potencia se traduce directamente en velocidad de circuito.</p>
+<h2>El tablero del lujo, reescrito</h2>
+<p>China ya no solo fabrica autos accesibles: produce máquinas capaces de <em>humillar</em> a deportivos europeos con décadas de historia. El golpe es tanto técnico como simbólico, porque cae sobre el escenario más sagrado del rendimiento.</p>
+<p>El mensaje para los fabricantes tradicionales es incómodo pero claro: el tablero del lujo y la alta performance se está reescribiendo a una velocidad vertiginosa, y los nuevos protagonistas no piden permiso.</p>""",
+    },
+    {
+        "slug": "ferrari-daytona-sp3-26-millones-subasta",
+        "img": "07 - Ferrari Daytona SP3.png",
+        "fecha": "PROGRAMADO:2026-06-25T14:00:00Z",
+        "cats": ["Noticias"],
+        "tags": ["ferrari", "daytona-sp3", "subasta", "coleccion"],
+        "titulo": "Ferrari Daytona SP3: cuando manejar es también invertir",
+        "extracto": "Un Daytona SP3 de la serie Icona alcanzó 26 millones de dólares en subasta. Con su V12 atmosférico y producción ultralimitada, los Ferrari de hoy son los tesoros de mañana.",
+        "html": """<p>No es un auto, es un activo. Un <strong>Ferrari Daytona SP3</strong> de la exclusiva serie <em>Icona</em> alcanzó los <strong>26 millones de dólares</strong> en subasta, confirmando que los Ferrari de hoy son los tesoros financieros de mañana.</p>
+<h2>El último canto del V12</h2>
+<p>En el corazón del SP3 late un <strong>V12 atmosférico</strong>, una joya mecánica en vías de extinción. En una era dominada por la electrificación, ese motor —sin turbos, sin asistencia eléctrica— se convierte en parte esencial de su valor: representa el final de una tradición irrepetible.</p>
+<h2>Diseño que mira al pasado glorioso</h2>
+<p>Con su producción ultralimitada y un diseño que reinterpreta el pasado glorioso de Maranello, el Daytona SP3 trasciende su función de automóvil. Es una escultura que rueda, pensada tanto para el asfalto como para la colección.</p>
+<p>La subasta lo confirma: ciertos automóviles dejan de ser medios de transporte para convertirse en piezas que solo se revalorizan con el tiempo. Manejar uno es, también, invertir.</p>""",
+    },
+]
+
+
+def to_webp(path: Path) -> bytes:
+    im = Image.open(path).convert("RGB")
+    buf = io.BytesIO()
+    im.save(buf, format="WEBP", quality=82, method=6)
+    return buf.getvalue()
+
+
+def sql_str(s: str) -> str:
+    return "'" + s.replace("'", "''") + "'"
+
+
+def main():
+    import json
+    lines = ["-- Publicación programada: 7 noticias Revista Motors (superdeportivos)"]
+    for p in POSTS:
+        src = UNZIP / p["img"]
+        data = to_webp(src)
+        key = f"{PREFIX}web-{p['slug']}.webp"
+        s3.put_object(
+            Bucket=BUCKET, Key=key, Body=data, ContentType="image/webp",
+            CacheControl="public, max-age=31536000, immutable",
+        )
+        portada = PUBLIC + key
+        print(f"  subida {key}  ({len(data)//1024} KB)")
+
+        fecha_sql = "datetime('now')" if p["fecha"] == "AHORA" else sql_str(p["fecha"].split("PROGRAMADO:")[1])
+        vals = ", ".join([
+            sql_str(p["slug"]),
+            sql_str(p["titulo"]),
+            fecha_sql,
+            sql_str(portada),
+            sql_str(p["extracto"]),
+            sql_str(p["html"]),
+            sql_str(json.dumps(p["cats"], ensure_ascii=False)),
+            sql_str(json.dumps(p["tags"], ensure_ascii=False)),
+        ])
+        lines.append(
+            "INSERT OR REPLACE INTO articulos "
+            "(slug, titulo, fecha, portada, extracto, html, categorias, tags) "
+            f"VALUES ({vals});"
+        )
+
+    out = ROOT / "scripts" / "publicar_tendencias.sql"
+    out.write_text("\n".join(lines) + "\n")
+    print(f"\nSQL generado: {out}")
+
+
+if __name__ == "__main__":
+    main()

@@ -28,6 +28,11 @@ type Shell = {
 // Decodifica el marco del tema (base64 UTF-8) una sola vez.
 const shell: Shell = decodeB64<Shell>(ARTICLE_SHELL_B64);
 
+// Solo se muestran las noticias cuya fecha ya llegó. Las publicaciones con fecha
+// futura quedan "programadas": aparecen solas cuando su fecha pasa, sin cron.
+// (fecha NULL = siempre visible, para los posts legacy.)
+const PUBLICADO = "(fecha IS NULL OR datetime(fecha) <= datetime('now'))";
+
 /**
  * Carga de páginas desde D1 (runtime edge, sin disco).
  *
@@ -100,7 +105,7 @@ type Card = { titulo: string; slug: string; fecha: string | null; portada: strin
 /** Últimas noticias publicadas (para alimentar portada/listados). */
 export async function getLatestArticulos(limit: number): Promise<Card[]> {
   return queryParams<Card>(
-    "SELECT titulo, slug, fecha, portada FROM articulos ORDER BY fecha DESC LIMIT ?1;",
+    `SELECT titulo, slug, fecha, portada FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC LIMIT ?1;`,
     [limit],
   );
 }
@@ -260,7 +265,7 @@ export async function getHomePage(): Promise<PageData | null> {
   const page = await getPageData("");
   if (!page) return null;
   const all = await queryParams<NewsCard>(
-    "SELECT titulo, slug, fecha, portada, categorias FROM articulos ORDER BY fecha DESC;",
+    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC;`,
     [],
   );
   let body = templatizeHome(page.body, all);
@@ -291,7 +296,7 @@ async function getTodasNoticias(): Promise<PageData | null> {
   if (!rows.length) return null;
   const page = JSON.parse(rows[0].data) as PageData;
   const all = await queryParams<NewsCard>(
-    "SELECT titulo, slug, fecha, portada, categorias FROM articulos ORDER BY fecha DESC;",
+    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC;`,
     [],
   );
   let body = templatizeHome(page.body, all);
@@ -312,7 +317,7 @@ async function getTodasNoticias(): Promise<PageData | null> {
 // Si hay pocas de esa categoría, completa con las más recientes en general.
 async function latestForCategory(catSlug: string): Promise<Card[]> {
   const all = await queryParams<Card & { categorias: string | null }>(
-    "SELECT titulo, slug, fecha, portada, categorias FROM articulos ORDER BY fecha DESC LIMIT 40;",
+    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC LIMIT 40;`,
     [],
   );
   const inCat = all.filter((a) => {
@@ -356,7 +361,7 @@ export async function getPageData(slug: string): Promise<PageData | null> {
 
   // 2) Noticia creada en el panel.
   const arts = await queryParams<Articulo>(
-    "SELECT slug, titulo, fecha, portada, extracto, html FROM articulos WHERE slug = ?1 LIMIT 1;",
+    `SELECT slug, titulo, fecha, portada, extracto, html FROM articulos WHERE slug = ?1 AND ${PUBLICADO} LIMIT 1;`,
     [slug],
   );
   if (arts.length) {
@@ -398,7 +403,7 @@ export async function getSearchData(): Promise<{
   items: SearchItem[];
 }> {
   const arts = await queryParams<Articulo>(
-    "SELECT slug, titulo, fecha, portada, extracto, html FROM articulos ORDER BY fecha DESC;",
+    `SELECT slug, titulo, fecha, portada, extracto, html FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC;`,
     [],
   );
   const orig = await queryParams<{
