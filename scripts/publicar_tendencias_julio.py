@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""Tendencias julio 2026: 5 noticias (temas generales, sin promo de marcas).
+Descarga imágenes libres de Wikimedia Commons, las convierte a WebP, las sube
+a R2 y genera el SQL de INSERT para D1 (fechas escalonadas: 1 hoy, 1/día 14:00 UTC).
+"""
+import io, json, urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+import boto3
+from botocore.config import Config
+from PIL import Image
+
+ROOT = Path("/Users/skychopan/Desktop/Prez - Backup/revista motor/revistamotors-next")
+PREFIX = "revistamottros/blog/"
+PUBLIC = "https://pub-25cde2184a5249da96fa022aae951321.r2.dev/"
+UA = {"User-Agent": "RevistaMotors/1.0 (contact: devprezec@gmail.com)"}
+
+def load_env():
+    env = {}
+    for line in (ROOT / ".env.local").read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            env[k.strip()] = v.strip()
+    return env
+
+E = load_env()
+s3 = boto3.client("s3", endpoint_url=E["R2_ENDPOINT"],
+    aws_access_key_id=E["R2_ACCESS_KEY_ID"], aws_secret_access_key=E["R2_SECRET_ACCESS_KEY"],
+    config=Config(signature_version="s3v4", region_name="auto"))
+BUCKET = E["R2_BUCKET_NAME"]
+
+IMAGES = {
+ "reacomodo": ("https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/001_Car_factory_assembly_line_-_Opel_factory_in_Gliwice%2C_Poland.jpg/1920px-001_Car_factory_assembly_line_-_Opel_factory_in_Gliwice%2C_Poland.jpg",
+   "Foto: Marek Ślusarczyk / Wikimedia Commons (CC BY 3.0)"),
+ "electrificacion": ("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cologne_Germany_Electric-Car-Charging-Point-at-TUV-Rheinland-01.jpg/1920px-Cologne_Germany_Electric-Car-Charging-Point-at-TUV-Rheinland-01.jpg",
+   "Foto: Raimond Spekking / Wikimedia Commons (CC BY-SA 3.0)"),
+ "regulacion": ("https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Parked_electric_kick_scooters_in_Benediktbeuerer_Stra%C3%9Fe_%28Munich%29.jpg/1920px-Parked_electric_kick_scooters_in_Benediktbeuerer_Stra%C3%9Fe_%28Munich%29.jpg",
+   "Foto: Wikimedia Commons (CC BY-SA 4.0)"),
+ "aranceles": ("https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Car_carrier_in_Veracruz.jpg/1920px-Car_carrier_in_Veracruz.jpg",
+   "Foto: Wikimedia Commons (CC BY-SA 4.0)"),
+ "micromovilidad": ("https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Grin_e-scooter_rider_in_Mexico_City.jpg/1920px-Grin_e-scooter_rider_in_Mexico_City.jpg",
+   "Foto: Wikimedia Commons (CC BY 3.0)"),
+}
+
+NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+POSTS = [
+ {
+  "key": "reacomodo",
+  "slug": "gran-reacomodo-industria-automotriz-latinoamerica",
+  "fecha": NOW,
+  "cats": ["Noticias", "Destacado"],
+  "tags": ["industria-automotriz", "produccion", "empleo", "latinoamerica"],
+  "titulo": "El gran reacomodo: la industria automotriz mueve sus fábricas y Latinoamérica siente el golpe",
+  "extracto": "Producción que cruza fronteras, exportaciones mexicanas en caída y recortes en Europa: el mapa industrial del automóvil se está redibujando, y la región se juega empleo e inversión.",
+  "html": """<p>La noticia de la semana en el mundo motor no es un auto: es un mapa. Las grandes armadoras están moviendo su producción de país en cuestión de meses, y el reacomodo ya se siente en toda la cadena: <strong>las exportaciones de vehículos de México cayeron 9,2 % en junio</strong> y la producción retrocedió 1,9 %, mientras en Argentina las terminales produjeron <strong>18,3 % menos</strong> en el primer semestre.</p>
+<h2>Un tablero que se mueve por reglas, no por motores</h2>
+<p>El detonante más visible fue el anuncio del traslado de parte de la producción instalada en el norte de México hacia Estados Unidos, tras la incertidumbre sobre el futuro del tratado comercial T-MEC. Pero el fenómeno es global: en Europa, los fabricantes recortan plantillas históricas y decenas de miles de trabajadores han salido a protestar contra el retroceso de sus condiciones.</p>
+<h2>Qué significa para nuestra región</h2>
+<p>Para Latinoamérica el reacomodo es amenaza y oportunidad a la vez. Amenaza, porque el empleo automotor depende de decisiones que se toman lejos y con lógica geopolítica. Oportunidad, porque varios estados y provincias ya trabajan en integrar <em>proveedores locales</em> a las cadenas de suministro que buscan nueva casa.</p>
+<p>La lección para el lector es clara: en los próximos años, el precio y la disponibilidad de los autos que llegan a nuestros concesionarios dependerán menos del diseño y más de dónde —y bajo qué reglas— se fabriquen. El motor del cambio, esta vez, es industrial.</p>""",
+ },
+ {
+  "key": "electrificacion",
+  "slug": "electrificacion-cambia-de-fase-carga-red-electrica",
+  "fecha": "2026-07-10T14:00:00Z",
+  "cats": ["Noticias"],
+  "tags": ["electromovilidad", "vehiculos-electricos", "carga", "infraestructura"],
+  "titulo": "La electrificación cambia de fase: ya no faltan autos eléctricos, falta dónde cargarlos",
+  "extracto": "La conversación sobre los autos eléctricos dio un giro: el reto ya no es el vehículo, sino la red eléctrica, los cargadores y una regulación que no avanza al mismo ritmo.",
+  "html": """<p>Durante años, hablar de autos eléctricos era hablar de autonomía y de modelos nuevos. Esa etapa terminó. La conversación de esta semana en la prensa especializada es otra: <strong>la red eléctrica y la infraestructura de carga</strong> se han convertido en el verdadero cuello de botella de la electromovilidad.</p>
+<h2>El freno ya no es el auto</h2>
+<p>Los analistas coinciden en que la oferta de vehículos eléctricos crece más rápido que los enchufes disponibles. A la falta de cargadores públicos se suma lo que algunos medios llaman la <em>«hiperregulación»</em>: trámites y normas que retrasan la instalación de puntos de carga y las mejoras de la red que los alimenta.</p>
+<h2>Latinoamérica entra al juego</h2>
+<p>Mientras tanto, la región gana protagonismo en el otro extremo de la cadena: varios polos industriales latinoamericanos se consolidan como centros de manufactura de vehículos eléctricos y de sus componentes, atrayendo inversión que antes se concentraba en Asia. Y la sobreoferta del gigantesco mercado chino está empujando los precios hacia abajo en todo el mundo.</p>
+<p>Para el conductor de a pie, la conclusión es práctica: el mejor momento para pasarse al eléctrico ya no depende solo del precio del auto, sino de si su ciudad —y su casa— tienen dónde cargarlo. La electrificación entró en su fase adulta: la de la infraestructura.</p>""",
+ },
+ {
+  "key": "regulacion",
+  "slug": "placa-para-tu-bici-electrica-regulacion-micromovilidad",
+  "fecha": "2026-07-11T14:00:00Z",
+  "cats": ["Noticias"],
+  "tags": ["regulacion", "seguridad-vial", "micromovilidad", "bicicletas-electricas"],
+  "titulo": "¿Placa para tu bici eléctrica? La ley empieza a alcanzar a la micromovilidad",
+  "extracto": "Ciudades de la región ya exigen emplacar bicicletas y motos eléctricas, y las leyes de movilidad incorporan la electromovilidad. La era de rodar sin papeles se está terminando.",
+  "html": """<p>Si tienes una bicicleta o un scooter eléctrico, toma nota: la etapa en la que estos vehículos circulaban en un vacío legal está llegando a su fin. Ciudad de México ya puso en marcha el <strong>emplacamiento de bicicletas y motos eléctricas</strong>, con requisitos, costos y plazos definidos, y varias legislaturas están incorporando la <strong>electromovilidad a sus leyes de movilidad y seguridad vial</strong>.</p>
+<h2>Por qué llegan las placas</h2>
+<p>La razón es simple: estos vehículos dejaron de ser una curiosidad. Hoy comparten calle con autos y peatones a velocidades nada despreciables, y las autoridades necesitan saber quién conduce qué, tanto para la <em>seguridad vial</em> como para responder ante accidentes y robos. El registro es el primer paso; normas de casco, carriles y seguros suelen venir después.</p>
+<h2>Lo que viene para la región</h2>
+<p>La tendencia apunta a extenderse por Latinoamérica: donde la micromovilidad eléctrica crece, la regulación la sigue. Para los usuarios responsables es, en realidad, una buena noticia: reglas claras significan más respeto en la vía, seguros que sí pagan y ciudades que empiezan a diseñar infraestructura pensando en ellos.</p>
+<p>El consejo es adelantarse: guarda la factura de tu vehículo eléctrico, infórmate sobre los registros disponibles en tu ciudad y usa casco aunque nadie te lo exija todavía. La formalidad llega, y conviene recibirla con los deberes hechos.</p>""",
+ },
+ {
+  "key": "aranceles",
+  "slug": "aranceles-tratados-nueva-geografia-del-automovil",
+  "fecha": "2026-07-12T14:00:00Z",
+  "cats": ["Noticias"],
+  "tags": ["aranceles", "tmec", "comercio", "geopolitica"],
+  "titulo": "Aranceles y tratados: la nueva geografía del automóvil no la dibujan los motores, sino las reglas",
+  "extracto": "La revisión de los tratados comerciales y los nuevos aranceles están decidiendo dónde se fabrican los autos del futuro — y cuánto costarán cuando lleguen a tu concesionario.",
+  "html": """<p>Hubo un tiempo en que la pregunta clave de la industria era qué motor llevaría el próximo modelo. Hoy la pregunta es otra: <strong>¿con qué aranceles entrará a cada mercado?</strong> La posible revisión anual del tratado comercial de Norteamérica y la ola de tarifas a la importación están redibujando el mapa de la producción mundial de vehículos.</p>
+<h2>Decisiones de fábrica, lógica de tratado</h2>
+<p>Los anuncios de esta semana lo confirman: los fabricantes están moviendo líneas de producción completas de un país a otro no por costos de mano de obra ni por cercanía a los clientes, sino para quedar del lado correcto de la frontera arancelaria. Incluso las marcas asiáticas que desembarcaron en la región evalúan su estrategia bajo esta nueva lógica — algunas ya anunciaron que se quedan, apostando a que el mercado latinoamericano vale el riesgo.</p>
+<h2>El efecto llega a tu bolsillo</h2>
+<p>Nada de esto es abstracto. Los aranceles se trasladan al precio final: un mismo modelo puede costar miles de dólares más o menos según dónde se ensamble y qué acuerdos tenga ese país con el nuestro. La disponibilidad también cambia: versiones que antes llegaban sin problema pueden desaparecer del catálogo de un año al otro.</p>
+<p>Para el comprador informado, la recomendación es mirar el origen de fabricación del auto que le interesa y los acuerdos comerciales vigentes. En la era de la geopolítica automotriz, esa etiqueta de «hecho en» pesa tanto como la ficha técnica.</p>""",
+ },
+ {
+  "key": "micromovilidad",
+  "slug": "micromovilidad-electrica-deja-de-ser-juguete",
+  "fecha": "2026-07-13T14:00:00Z",
+  "cats": ["Noticias"],
+  "tags": ["micromovilidad", "motos-electricas", "scooters", "movilidad-urbana"],
+  "titulo": "La micromovilidad deja de ser un juguete: scooters y motos eléctricas se toman la ciudad",
+  "extracto": "Los grandes fabricantes lanzan sus primeras motos eléctricas y las ciudades integran los scooters a su transporte diario. La micromovilidad ya es un medio de transporte serio.",
+  "html": """<p>Algo cambió en la calle. Los scooters y las motos eléctricas dejaron de ser el juguete de moda para convertirse en <strong>un medio de transporte serio</strong>: los grandes fabricantes de motocicletas están lanzando sus primeras motos 100 % eléctricas de producción, y las ciudades ya las cuentan, las registran y las integran a sus planes de movilidad.</p>
+<h2>De la acera al plan de movilidad</h2>
+<p>La señal más clara es institucional: los gobiernos urbanos pasaron de tolerar la micromovilidad a organizarla. Registros de scooters, zonas de estacionamiento, límites de velocidad y carriles compartidos con bicicletas aparecen en cada vez más ciudades de la región. Lo que se regula es lo que importa — y la micromovilidad ya importa.</p>
+<h2>Las cuentas que convencen</h2>
+<p>El argumento definitivo es económico. Frente al auto, un vehículo eléctrico ligero cuesta una fracción, se carga en un enchufe doméstico, no paga gasolina y esquiva el tráfico que consume horas de vida en nuestras ciudades. Para millones de trayectos urbanos de menos de 10 kilómetros, es sencillamente la herramienta correcta.</p>
+<p>Quedan deberes pendientes —cascos, disciplina vial e infraestructura segura—, pero la dirección es clara: la próxima revolución de la movilidad urbana no rugirá; zumbará bajito entre el tráfico detenido.</p>""",
+ },
+]
+
+def to_webp(data: bytes) -> bytes:
+    im = Image.open(io.BytesIO(data)).convert("RGB")
+    if im.width > 1536:
+        im = im.resize((1536, round(im.height * 1536 / im.width)), Image.LANCZOS)
+    buf = io.BytesIO()
+    im.save(buf, format="WEBP", quality=82, method=6)
+    return buf.getvalue()
+
+def sql_str(s: str) -> str:
+    return "'" + s.replace("'", "''") + "'"
+
+lines = ["-- Publicación programada: 5 noticias de tendencias (julio 2026)"]
+for p in POSTS:
+    url, credito = IMAGES[p["key"]]
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        raw = r.read()
+    data = to_webp(raw)
+    key = f"{PREFIX}web-{p['slug']}.webp"
+    s3.put_object(Bucket=BUCKET, Key=key, Body=data, ContentType="image/webp",
+                  CacheControl="public, max-age=31536000, immutable")
+    portada = PUBLIC + key
+    print(f"  subida {key}  ({len(data)//1024} KB)")
+
+    html = p["html"] + f'\n<p><em>{credito}</em></p>'
+    vals = ", ".join([
+        sql_str(p["slug"]), sql_str(p["titulo"]), sql_str(p["fecha"]),
+        sql_str(portada), sql_str(p["extracto"]), sql_str(html),
+        sql_str(json.dumps(p["cats"], ensure_ascii=False)),
+        sql_str(json.dumps(p["tags"], ensure_ascii=False)),
+    ])
+    lines.append("INSERT OR REPLACE INTO articulos "
+                 "(slug, titulo, fecha, portada, extracto, html, categorias, tags) "
+                 f"VALUES ({vals});")
+
+out = Path("publicar_tendencias_julio.sql")
+out.write_text("\n".join(lines) + "\n")
+print(f"SQL generado: {out.resolve()}")
