@@ -11,4 +11,8 @@ export type PageData = {
   head: string;
   body: string;
   scripts: ScriptEntry[];
+  // SEO opcional (lo llenan las noticias del panel): meta description y
+  // portada para canonical/OpenGraph en generateMetadata.
+  description?: string;
+  image?: string;
 };

@@ -17,7 +17,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const page = await getPageData(slug.join("/"));
-  return { title: page?.title || "Revista Motors Ecuador" };
+  if (!page) return { title: "Revista Motors Ecuador" };
+  return {
+    title: page.title,
+    description: page.description,
+    alternates: { canonical: page.route },
+    openGraph: {
+      title: page.title,
+      description: page.description,
+      url: page.route,
+      ...(page.image ? { images: [page.image] } : {}),
+    },
+  };
 }
 
 export default async function Page({

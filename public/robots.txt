@@ -1,0 +1,7 @@
+# Revista Motors Ecuador
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://revistamotors.com.ec/sitemap.xml

@@ -67,6 +67,28 @@ type Articulo = {
  * se inyecta en el `entry-content` y se reemplazan los valores de la plantilla
  * (título, imagen, fecha, enlaces) por los de la noticia.
  */
+// Datos estructurados NewsArticle (Google News/Discover) para una noticia.
+function newsArticleJsonLd(a: Articulo): string {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: a.titulo,
+    ...(a.fecha ? { datePublished: a.fecha, dateModified: a.fecha } : {}),
+    ...(a.portada ? { image: [a.portada] } : {}),
+    ...(a.extracto ? { description: a.extracto } : {}),
+    mainEntityOfPage: `https://revistamotors.com.ec/${a.slug}/`,
+    author: { "@type": "Organization", name: "Revista Motors" },
+    publisher: {
+      "@type": "Organization",
+      name: "Revista Motors Ecuador",
+      logo: { "@type": "ImageObject", url: "https://revistamotors.com.ec/icon.webp" },
+    },
+  };
+  // "<" escapado para que un título no pueda cerrar el <script>.
+  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  return `<script type="application/ld+json">${json}</script>`;
+}
+
 function assembleArticulo(a: Articulo, latest: Card[]): PageData {
   const titulo = escapeHtml(a.titulo);
   let body = shell.prefix + (a.html ?? "") + shell.suffix;
@@ -82,9 +104,10 @@ function assembleArticulo(a: Articulo, latest: Card[]): PageData {
   body = replaceCards(body, "p-list-inline", related);
   body = replaceCards(body, "p-list-small-2", related);
 
-  // og:title / og:image en el head, por noticia.
+  // og:title / og:image en el head, por noticia. Más NewsArticle (JSON-LD).
   let head = shell.head.split(shell.title).join(titulo);
   if (a.portada) head = head.split(shell.featuredSrc).join(escapeHtml(a.portada));
+  head += newsArticleJsonLd(a);
 
   return {
     route: `/${a.slug}/`,
@@ -93,6 +116,8 @@ function assembleArticulo(a: Articulo, latest: Card[]): PageData {
     head,
     body: injectMenuItem(body),
     scripts: shell.scripts,
+    description: a.extracto ?? undefined,
+    image: a.portada ?? undefined,
   };
 }
 
@@ -146,6 +171,15 @@ function templatizeHome(body: string, latest: Card[]): string {
 
 type NewsCard = Card & { categorias: string | null };
 
+// srcset para portadas del blog en R2: existe una variante de 800px por cada
+// imagen (misma clave + "-800.webp", generada por scripts/gen-r2-variants.py).
+// Las tarjetas miden ~400px, así el navegador no baja la imagen de 1536px.
+function srcsetPortada(portada: string): string {
+  const m = portada.match(/^(https:\/\/pub-[a-z0-9]+\.r2\.dev\/revistamottros\/blog\/web-.+)\.webp$/);
+  if (!m) return "";
+  return ` srcset="${escapeHtml(m[1])}-800.webp 800w, ${escapeHtml(portada)} 1536w" sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"`;
+}
+
 // Una tarjeta de la cuadrícula "Todas las Noticias" (markup del tema).
 function buildNewsCard(a: NewsCard): string {
   const href = `/${a.slug}/`;
@@ -163,7 +197,7 @@ function buildNewsCard(a: NewsCard): string {
   <div class="feat-holder">
     <div class="p-featured"><a class="p-flink" href="${href}" title="${titulo}"><img class="featured-img wp-post-image" src="${escapeHtml(
       a.portada || "/icon.webp",
-    )}" alt="${titulo}" loading="lazy" onerror="this.onerror=null;this.src='/icon.webp'"/></a></div>
+    )}"${a.portada ? srcsetPortada(a.portada) : ""} alt="${titulo}" loading="lazy" width="800" height="533" onerror="this.onerror=null;this.src='/icon.webp'"/></a></div>
     ${catLink}
   </div>
   <h3 class="entry-title"><a class="p-url" href="${href}" rel="bookmark">${titulo}</a></h3>
@@ -187,17 +221,27 @@ function buildAllNewsSection(arts: NewsCard[]): string {
 </div>`;
 }
 
-/** Portada: hero con lo reciente + sección "Todas las Noticias" con todos los posts. */
+// Botón "Ver todas las noticias" al pie de la sección del home.
+const VER_TODAS =
+  '<div style="text-align:center;margin-top:26px"><a href="/todas-las-noticias/" style="display:inline-block;background:#ed1c24;color:#fff;font-weight:800;padding:12px 28px;border-radius:10px">Ver todas las noticias →</a></div>';
+
+/** Portada: hero con lo reciente + sección con las últimas noticias. */
 export async function getHomePage(): Promise<PageData | null> {
   const page = await getPageData("");
   if (!page) return null;
+  // 60 alcanza para el hero + tarjetas del tema + la cuadrícula de abajo;
+  // el listado completo vive en /todas-las-noticias/ (paginado).
   const all = await queryParams<NewsCard>(
-    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC;`,
+    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC LIMIT 60;`,
     [],
   );
   let body = templatizeHome(page.body, all);
-  // Insertar "Todas las Noticias" justo antes del footer.
-  const section = buildAllNewsSection(all);
+  // Insertar la sección (últimas 12 + enlace al listado) justo antes del footer.
+  let section = buildAllNewsSection(all.slice(0, 12));
+  const lastClose = section.lastIndexOf("</div>");
+  if (lastClose >= 0) {
+    section = section.slice(0, lastClose) + VER_TODAS + section.slice(lastClose);
+  }
   const f = body.indexOf("<footer");
   body = f >= 0 ? body.slice(0, f) + section + body.slice(f) : body + section;
   return { ...page, body };
@@ -213,8 +257,27 @@ function injectMenuItem(body: string): string {
   return body.slice(0, open) + li + body.slice(open);
 }
 
-/** Página "/todas-las-noticias/": listado con TODOS los artículos de la BD. */
-async function getTodasNoticias(): Promise<PageData | null> {
+const NOTICIAS_POR_PAGINA = 24;
+
+// Barra de paginación « Anterior · página X de Y · Siguiente »
+function buildPaginacion(pagina: number, total: number): string {
+  const paginas = Math.max(1, Math.ceil(total / NOTICIAS_POR_PAGINA));
+  if (paginas <= 1) return "";
+  const url = (n: number) =>
+    n <= 1 ? "/todas-las-noticias/" : `/todas-las-noticias/${n}/`;
+  const btn = (href: string, label: string) =>
+    `<a href="${href}" style="display:inline-block;background:#0e1116;color:#fff;font-weight:700;padding:10px 22px;border-radius:8px;margin:0 6px">${label}</a>`;
+  return (
+    '<div class="rm-paginacion" style="text-align:center;margin:30px 0 10px">' +
+    (pagina > 1 ? btn(url(pagina - 1), "← Anterior") : "") +
+    `<span style="color:#6b7280;font-weight:600;margin:0 10px">Página ${pagina} de ${paginas}</span>` +
+    (pagina < paginas ? btn(url(pagina + 1), "Siguiente →") : "") +
+    "</div>"
+  );
+}
+
+/** Página "/todas-las-noticias/[n]": listado paginado de los artículos de la BD. */
+async function getTodasNoticias(pagina: number): Promise<PageData | null> {
   // Reutiliza el layout de listado de la categoría "Noticias".
   const rows = await queryParams<{ data: string }>(
     "SELECT data FROM paginas WHERE slug = 'categoria/noticias' LIMIT 1;",
@@ -222,20 +285,30 @@ async function getTodasNoticias(): Promise<PageData | null> {
   );
   if (!rows.length) return null;
   const page = JSON.parse(rows[0].data) as PageData;
-  const all = await queryParams<NewsCard>(
-    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO} ORDER BY datetime(fecha) DESC;`,
+  const [{ n: total }] = await queryParams<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM articulos WHERE ${PUBLICADO};`,
     [],
   );
-  let body = templatizeHome(page.body, all);
+  const lote = await queryParams<NewsCard>(
+    `SELECT titulo, slug, fecha, portada, categorias FROM articulos WHERE ${PUBLICADO}
+     ORDER BY datetime(fecha) DESC LIMIT ?1 OFFSET ?2;`,
+    [NOTICIAS_POR_PAGINA, (pagina - 1) * NOTICIAS_POR_PAGINA],
+  );
+  if (!lote.length && pagina > 1) return null; // página fuera de rango -> 404
+  let body = templatizeHome(page.body, lote);
   body = body.replace(
     '<h1 class="archive-title">Noticias</h1>',
     '<h1 class="archive-title">Todas las Noticias</h1>',
   );
+  // Paginación antes del footer.
+  const nav = buildPaginacion(pagina, total);
+  const f = body.indexOf("<footer");
+  body = f >= 0 ? body.slice(0, f) + nav + body.slice(f) : body + nav;
   body = injectMenuItem(body);
   return {
     ...page,
-    route: "/todas-las-noticias/",
-    title: "Todas las Noticias",
+    route: pagina <= 1 ? "/todas-las-noticias/" : `/todas-las-noticias/${pagina}/`,
+    title: pagina <= 1 ? "Todas las Noticias" : `Todas las Noticias — página ${pagina}`,
     body,
   };
 }
@@ -262,8 +335,10 @@ async function latestForCategory(catSlug: string): Promise<Card[]> {
 
 /** Devuelve la página de un slug ("" = home), o null si no existe. */
 export async function getPageData(slug: string): Promise<PageData | null> {
-  // Página propia "Todas las Noticias".
-  if (slug === "todas-las-noticias") return getTodasNoticias();
+  // Página propia "Todas las Noticias" (paginada: /todas-las-noticias/2/ …).
+  if (slug === "todas-las-noticias") return getTodasNoticias(1);
+  const mPag = slug.match(/^todas-las-noticias\/(\d+)$/);
+  if (mPag) return getTodasNoticias(Math.max(1, parseInt(mPag[1], 10)));
 
   // 1) Página original (HTML idéntico al snapshot).
   const pages = await queryParams<{ data: string }>(

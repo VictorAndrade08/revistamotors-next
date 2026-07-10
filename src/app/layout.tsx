@@ -25,6 +25,18 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        {/* React los eleva al <head> real: conexiones tempranas a los CDNs
+            de imágenes (R2) y fuentes, antes de que el navegador parsee el
+            head del tema (que va incrustado en el body). */}
+        <link rel="preconnect" href="https://pub-25cde2184a5249da96fa022aae951321.r2.dev" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Revista Motors Ecuador"
+          href="/feed.xml"
+        />
         {children}
         <ClientEnhancements />
         <AdsManager />

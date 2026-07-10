@@ -47,6 +47,21 @@ export default function ClientEnhancements() {
     };
     document.addEventListener("error", onErr, true);
 
+    // --- Prefetch al pasar el mouse: precalienta la página destino en el
+    //     caché del navegador/CDN, así el clic navega casi al instante. ---
+    const prefetched = new Set<string>();
+    const onHover = (e: Event) => {
+      const a = (e.target as HTMLElement)?.closest?.("a[href^='/']");
+      const href = a?.getAttribute("href");
+      if (!href || href.startsWith("/admin") || prefetched.has(href)) return;
+      prefetched.add(href);
+      const l = document.createElement("link");
+      l.rel = "prefetch";
+      l.href = href;
+      document.head.appendChild(l);
+    };
+    document.addEventListener("mouseover", onHover, true);
+
     // --- 3) Botón "Votar": no llamar al backend muerto; mostrar "enviado" ---
     const onVote = (e: Event) => {
       const t = (e.target as HTMLElement)?.closest(
@@ -71,6 +86,7 @@ export default function ClientEnhancements() {
       document.removeEventListener("pointerdown", onDown, true);
       document.removeEventListener("pointerup", onUp, true);
       document.removeEventListener("error", onErr, true);
+      document.removeEventListener("mouseover", onHover, true);
     };
   }, []);
 

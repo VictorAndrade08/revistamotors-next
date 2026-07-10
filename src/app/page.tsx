@@ -10,7 +10,10 @@ export const runtime = "edge";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getHomePage();
-  return { title: page?.title || "Revista Motors Ecuador" };
+  return {
+    title: page?.title || "Revista Motors Ecuador",
+    alternates: { canonical: "/" },
+  };
 }
 
 export default async function Home() {
