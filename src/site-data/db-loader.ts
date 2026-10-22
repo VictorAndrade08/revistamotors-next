@@ -263,10 +263,25 @@ function injectMenuItem(body: string): string {
   return body.slice(0, open) + li + body.slice(open);
 }
 
-// Enlace a la política de privacidad en el pie (junto al © de todas las páginas).
+// Enlace a la política de privacidad en el pie de todas las páginas: una
+// columna "Legal" (en la primera columna vacía del footer, con el markup de
+// los widgets del tema) y, además, junto al © de abajo.
+const FOOTER_LEGAL_COL =
+  '<div class="footer-col"><div class="widget w-sidebar rb-section clearfix widget_nav_menu" id="legal-1">' +
+  '<div class="block-h widget-heading heading-layout-10"><div class="heading-inner"><h4 class="heading-title"><span>Legal</span></h4></div></div>' +
+  `<div class="menu-legal-container"><ul class="menu"><li class="menu-item"><a href="${POLITICA_PRIVACIDAD_RUTA}">Política de privacidad</a></li></ul></div>` +
+  "</div></div>";
+
 function injectFooterLink(body: string): string {
   if (body.indexOf(`href="${POLITICA_PRIVACIDAD_RUTA}"`) >= 0) return body;
-  const idx = body.indexOf('<div class="copyright">');
+  const foot = body.indexOf("<footer");
+  if (foot < 0) return body;
+  const EMPTY_COL = '<div class="footer-col"></div>';
+  const col = body.indexOf(EMPTY_COL, foot);
+  if (col >= 0) {
+    body = body.slice(0, col) + FOOTER_LEGAL_COL + body.slice(col + EMPTY_COL.length);
+  }
+  const idx = body.indexOf('<div class="copyright">', foot);
   if (idx < 0) return body;
   const close = body.indexOf("</p>", idx);
   if (close < 0) return body;
