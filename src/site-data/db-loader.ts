@@ -5,6 +5,12 @@ import { ARTICLE_SHELL_B64 } from "./article-shell";
 import { SEARCH_SHELL_B64 } from "./search-shell";
 import type { PageData, ScriptEntry } from "./loader";
 import {
+  POLITICA_PRIVACIDAD_DESCRIPCION,
+  POLITICA_PRIVACIDAD_HTML,
+  POLITICA_PRIVACIDAD_RUTA,
+  POLITICA_PRIVACIDAD_TITULO,
+} from "./politica-privacidad";
+import {
   type Card,
   formatFecha,
   findCards,
@@ -114,7 +120,7 @@ function assembleArticulo(a: Articulo, latest: Card[]): PageData {
     title: a.titulo,
     bodyClass: shell.bodyClass,
     head,
-    body: injectMenuItem(body),
+    body: injectSiteLinks(body),
     scripts: shell.scripts,
     description: a.extracto ?? undefined,
     image: a.portada ?? undefined,
@@ -257,6 +263,59 @@ function injectMenuItem(body: string): string {
   return body.slice(0, open) + li + body.slice(open);
 }
 
+// Enlace a la política de privacidad en el pie (junto al © de todas las páginas).
+function injectFooterLink(body: string): string {
+  if (body.indexOf(`href="${POLITICA_PRIVACIDAD_RUTA}"`) >= 0) return body;
+  const idx = body.indexOf('<div class="copyright">');
+  if (idx < 0) return body;
+  const close = body.indexOf("</p>", idx);
+  if (close < 0) return body;
+  const link = ` · <a href="${POLITICA_PRIVACIDAD_RUTA}">Política de privacidad</a>`;
+  return body.slice(0, close) + link + body.slice(close);
+}
+
+// Enlaces propios del sitio que no existen en los snapshots del tema.
+function injectSiteLinks(body: string): string {
+  return injectFooterLink(injectMenuItem(body));
+}
+
+/**
+ * /politica-de-privacidad/: texto de src/site-data/politica-privacidad.ts
+ * montado en el marco de página simple del tema (la fila "sample-page" de
+ * `paginas`: cabecera, título y entry-content sin barra lateral).
+ */
+async function getPoliticaPrivacidad(): Promise<PageData | null> {
+  const rows = await queryParams<{ data: string }>(
+    "SELECT data FROM paginas WHERE slug = 'sample-page' LIMIT 1;",
+    [],
+  );
+  if (!rows.length) return null;
+  const page = JSON.parse(rows[0].data) as PageData;
+  const titulo = escapeHtml(POLITICA_PRIVACIDAD_TITULO);
+  // "sample-page" aparece también sin barras (redirecciones del login del
+  // tema, config JS), así que se sustituye el slug a secas.
+  const slug = POLITICA_PRIVACIDAD_RUTA.replace(/\//g, "");
+  let body = page.body.split("Sample Page").join(titulo);
+  body = body.split("sample-page").join(slug);
+  const OPEN = '<div class="entry-content rbct">';
+  const start = body.indexOf(OPEN);
+  const end = body.indexOf('<div class="clearfix"></div>', start);
+  if (start < 0 || end < 0) return null;
+  body =
+    body.slice(0, start + OPEN.length) + POLITICA_PRIVACIDAD_HTML + body.slice(end);
+  return {
+    ...page,
+    route: POLITICA_PRIVACIDAD_RUTA,
+    title: `${POLITICA_PRIVACIDAD_TITULO} - Revista Motors Ecuador`,
+    description: POLITICA_PRIVACIDAD_DESCRIPCION,
+    body: injectSiteLinks(body),
+    // La config inline del tema también lleva el permalink de la página.
+    scripts: page.scripts.map((sc) =>
+      sc.code ? { ...sc, code: sc.code.split("sample-page").join(slug) } : sc,
+    ),
+  };
+}
+
 const NOTICIAS_POR_PAGINA = 24;
 
 // Barra de paginación « Anterior · página X de Y · Siguiente »
@@ -304,7 +363,7 @@ async function getTodasNoticias(pagina: number): Promise<PageData | null> {
   const nav = buildPaginacion(pagina, total);
   const f = body.indexOf("<footer");
   body = f >= 0 ? body.slice(0, f) + nav + body.slice(f) : body + nav;
-  body = injectMenuItem(body);
+  body = injectSiteLinks(body);
   return {
     ...page,
     route: pagina <= 1 ? "/todas-las-noticias/" : `/todas-las-noticias/${pagina}/`,
@@ -339,6 +398,7 @@ export async function getPageData(slug: string): Promise<PageData | null> {
   if (slug === "todas-las-noticias") return getTodasNoticias(1);
   const mPag = slug.match(/^todas-las-noticias\/(\d+)$/);
   if (mPag) return getTodasNoticias(Math.max(1, parseInt(mPag[1], 10)));
+  if (`/${slug}/` === POLITICA_PRIVACIDAD_RUTA) return getPoliticaPrivacidad();
 
   // 1) Página original (HTML idéntico al snapshot).
   const pages = await queryParams<{ data: string }>(
@@ -354,7 +414,7 @@ export async function getPageData(slug: string): Promise<PageData | null> {
         const catSlug = slug.split("/")[1] ?? "";
         body = templatizeHome(body, await latestForCategory(catSlug));
       }
-      body = injectMenuItem(body); // pestaña "Todas las Noticias" en todas las páginas
+      body = injectSiteLinks(body); // "Todas las Noticias" en el menú y la política en el pie
       return { ...page, body };
     } catch {
       return null;

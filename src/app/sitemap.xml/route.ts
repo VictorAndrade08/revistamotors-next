@@ -1,5 +1,6 @@
 import { query } from "@/lib/d1";
 import { escapeHtml } from "@/lib/text";
+import { POLITICA_PRIVACIDAD_RUTA } from "@/site-data/politica-privacidad";
 
 // Sitemap dinámico desde D1: páginas originales + noticias publicadas.
 // Se regenera en cada petición (el CDN lo cachea 1 hora), así que una noticia
@@ -26,6 +27,7 @@ export async function GET() {
 
   add("/");
   add("/todas-las-noticias/");
+  add(POLITICA_PRIVACIDAD_RUTA);
   for (const a of arts) add(`/${a.slug}/`, a.fecha);
   for (const p of pages) {
     if (p.slug) add(`/${p.slug}/`);
