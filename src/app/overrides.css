@@ -167,3 +167,7 @@ a.basic-vote-button {
 .footer-wrap .footer-social-list-title {
   border-color: rgba(255, 255, 255, 0.15);
 }
+/* Sin las barras "//" decorativas sobre la frase del pie */
+.footer-wrap .textwidget > .h1:first-child {
+  display: none;
+}
