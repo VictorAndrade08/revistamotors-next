@@ -147,3 +147,23 @@ a.basic-vote-button {
   object-fit: contain;
   background: #fff;
 }
+
+/* Pie en el azul de la marca (#13182c). El marcado lleva .light-scheme
+   (lo añade src/lib/marca.ts), que pasa los textos del tema a blanco. */
+.footer-wrap,
+.footer-wrap .footer-has-bg,
+[data-theme="dark"] .footer-wrap .footer-has-bg {
+  background-color: #13182c;
+}
+.footer-wrap a {
+  color: #fff;
+}
+.footer-wrap .copyright,
+.footer-wrap .copyright a,
+.footer-wrap .entry-summary {
+  color: rgba(255, 255, 255, 0.8);
+}
+.footer-wrap .copyright-inner,
+.footer-wrap .footer-social-list-title {
+  border-color: rgba(255, 255, 255, 0.15);
+}
