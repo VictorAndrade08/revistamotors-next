@@ -1,4 +1,5 @@
 import type { PageData } from "@/site-data/loader";
+import { aplicarMarca } from "@/lib/marca";
 import ThemeScripts from "./ThemeScripts";
 
 /**
@@ -24,9 +25,9 @@ export default function SitePage({ page }: { page: PageData }) {
       <div
         className="hidden"
         aria-hidden
-        dangerouslySetInnerHTML={{ __html: page.head }}
+        dangerouslySetInnerHTML={{ __html: aplicarMarca(page.head) }}
       />
-      <div dangerouslySetInnerHTML={{ __html: eagerizeAboveFold(page.body) }} />
+      <div dangerouslySetInnerHTML={{ __html: eagerizeAboveFold(aplicarMarca(page.body)) }} />
       <ThemeScripts scripts={page.scripts} />
     </div>
   );

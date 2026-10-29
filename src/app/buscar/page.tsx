@@ -2,6 +2,7 @@ import ThemeScripts from "@/components/ThemeScripts";
 import SearchFilter from "@/components/SearchFilter";
 import { getSearchData, type SearchShell, type SearchItem } from "@/site-data/db-loader";
 import { escapeHtml } from "@/lib/text";
+import { aplicarMarca } from "@/lib/marca";
 
 // El buscador se sirve desde D1 (runtime edge): las noticias creadas en el
 // panel quedan buscables al instante, junto con las originales.
@@ -20,14 +21,14 @@ function buildCard(shell: SearchShell, it: SearchItem): string {
 export default async function BuscarPage() {
   const { shell, items } = await getSearchData();
   const cards = items.map((it) => buildCard(shell, it)).join("\n");
-  const html = shell.prefix + cards + shell.suffix;
+  const html = aplicarMarca(shell.prefix) + cards + aplicarMarca(shell.suffix);
 
   return (
     <div className={shell.bodyClass}>
       <div
         className="hidden"
         aria-hidden
-        dangerouslySetInnerHTML={{ __html: shell.head }}
+        dangerouslySetInnerHTML={{ __html: aplicarMarca(shell.head) }}
       />
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <ThemeScripts scripts={shell.scripts} />

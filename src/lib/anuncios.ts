@@ -13,7 +13,7 @@ export const ANUNCIOS: Anuncio[] = [
     id: "horizontal",
     ubicacion: "Banner horizontal",
     descripcion: "Aparece arriba (sobre el logo) y entre el contenido.",
-    path: "/assets/uploads/2023/07/MOTORS-BANNER-1500X170.jpg",
+    path: "/assets/uploads/2026/10/MOTORS-BANNER-1500X170-comec.jpg",
     ancho: 1500,
     alto: 170,
   },
